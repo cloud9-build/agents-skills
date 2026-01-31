@@ -139,26 +139,7 @@ Options:
 3. Verify completed work: /gm-guard
 ```
 
-**If phase complete:**
-```
-## Recommended Action
-
-Phase 2 complete. Ready for Phase 3.
-
-To start Phase 3:
-/gm-phase 3
-
-Or verify Phase 2 first:
-/gm-guard 2
-```
-
-### Step 6: Update Session Tracking
-
-1. Register or update this session in `sessions.md`
-2. Update "Last Ping" timestamp
-3. Log restoration in session history
-
-### Step 7: Output Full Summary
+### Step 6: Output Full Summary
 
 ```markdown
 # Session Restored
@@ -176,13 +157,6 @@ Or verify Phase 2 first:
 **Active Sessions:** [N]
 **Your Session:** gm-004 (new/returning)
 **Your Assignment:** [plan or none]
-
-## Recent Activity
-[Last 5 entries from combined STATE.md and sessions.md]
-
-## Where You Left Off
-**Previous:** [task or "New session"]
-**Current:** [status]
 
 ## Recommended Action
 [Specific next step based on state]
@@ -207,37 +181,4 @@ SESSION: gm-004 (new)
 ACTIVE: 3 sessions, 2 plans in progress
 WAVE: 2 (1/2 complete)
 NEXT: /gm-claim 02-04 or /gm-parallel
-```
-
-## Handling Stale Sessions
-
-If detecting stale sessions (no ping > 30m):
-```
-## Warning: Stale Sessions Detected
-
-Session gm-002 has been inactive for 45 minutes.
-Plan 02-02 may be abandoned.
-
-Options:
-1. Wait for session to return
-2. Take over: /gm-claim 02-02 --force
-3. Release for others: /gm-release 02-02
-```
-
-## Handling Migration
-
-If old `.gm/` directory detected:
-```
-## Legacy God Mode Detected
-
-Found old .gm/ directory from standalone God Mode.
-
-God Mode now integrates with GSD for parallel coordination.
-
-To migrate:
-1. Your project data is in .planning/ (GSD)
-2. Session data is now in .planning/parallel/
-3. Old .gm/ files are no longer used
-
-Safe to delete: rm -rf .gm/
 ```

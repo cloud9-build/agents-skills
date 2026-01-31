@@ -58,9 +58,10 @@ God Mode adds parallel coordination to GSD's existing structure:
 ├── STATE.md                     # GSD's state (read by God Mode)
 └── phases/                      # GSD's phase plans
     └── 01-foundation/
-        ├── PLAN-01-01.md        # Has wave: 1 in frontmatter
-        ├── PLAN-01-02.md        # Has wave: 1 in frontmatter
-        └── PLAN-01-03.md        # Has wave: 2 in frontmatter
+        ├── 01-01-PLAN.md        # Has wave: 1 in frontmatter
+        ├── 01-02-PLAN.md        # Has wave: 1 in frontmatter
+        └── 01-03-PLAN.md        # Has wave: 2 in frontmatter
+        # Note: Supports decimal phases like 05.1-01-PLAN.md
 ```
 
 ## When User Runs /gm

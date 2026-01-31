@@ -20,7 +20,7 @@ Analyze GSD's PLAN.md files in the current phase, read their `wave` frontmatter,
 
 ### Step 2: Read Phase Plans
 1. Get current phase from STATE.md
-2. Find all PLAN-*.md files in `.planning/phases/[phase]/`
+2. Find all `*-PLAN.md` files in `.planning/phases/[phase]/` (supports decimal phases like `05.1-01-PLAN.md`)
 3. Parse frontmatter from each plan:
    ```yaml
    ---
@@ -37,16 +37,16 @@ Organize plans into wave groups:
 
 ```
 Wave 1 (can start now):
-  - PLAN-01-01: Database Schema
-  - PLAN-01-02: User Authentication
-  - PLAN-01-03: API Routes
+  - 01-01-PLAN: Database Schema
+  - 01-02-PLAN: User Authentication
+  - 01-03-PLAN: API Routes
 
 Wave 2 (after wave 1 complete):
-  - PLAN-01-04: Frontend Integration
-  - PLAN-01-05: Error Handling
+  - 01-04-PLAN: Frontend Integration
+  - 01-05-PLAN: Error Handling
 
 Wave 3 (after wave 2 complete):
-  - PLAN-01-06: Testing & QA
+  - 01-06-PLAN: Testing & QA
 ```
 
 ### Step 4: Check Current Assignments
@@ -86,12 +86,6 @@ Read `.planning/parallel/assignments.md` to see:
 | 01-05 | Error Handling | Wave 1 incomplete |
 
 *These plans will be available after Wave 1 completes.*
-
-### Wave 3: Waiting (1 plan)
-
-| Plan | Title | Blocked By |
-|------|-------|------------|
-| 01-06 | Testing & QA | Wave 2 incomplete |
 
 ---
 
@@ -134,28 +128,17 @@ Run /gsd:plan-phase to create plans first.
 All plans in Wave [N] are already assigned.
 
 Active sessions:
-- gm-001: PLAN-01-01 (in_progress)
-- gm-002: PLAN-01-02 (in_progress)
-- gm-003: PLAN-01-03 (in_progress)
+- gm-001: 01-01-PLAN (in_progress)
+- gm-002: 01-02-PLAN (in_progress)
+- gm-003: 01-03-PLAN (in_progress)
 
 Wait for current work to complete, or run /gm-status for details.
-```
-
-**If wave complete but next wave blocked:**
-```
-Wave 1 complete. Wave 2 is blocked.
-
-Blocking issues:
-- PLAN-01-01 completed but verification failed
-- See /gsd:verify-work for details
-
-Fix blocking issues before Wave 2 can start.
 ```
 
 ## Wave Calculation
 
 If a PLAN.md doesn't have a `wave` field, God Mode should:
-1. Warn: "PLAN-01-02 missing wave assignment"
+1. Warn: "01-02-PLAN missing wave assignment"
 2. Default to highest wave + 1 (treat as sequential)
 3. Suggest: "Run /gsd:plan-phase to regenerate with wave assignments"
 

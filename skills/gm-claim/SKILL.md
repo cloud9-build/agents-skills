@@ -6,10 +6,10 @@ description: Claim a GSD plan for this terminal to work on. Updates assignments.
 # /gm-claim [plan]: Claim a Plan
 
 ## Trigger
-User runs `/gm-claim 01-02` or `/gm-claim PLAN-01-02`.
+User runs `/gm-claim 01-02` or `/gm-claim 01-02-PLAN`.
 
 ## Arguments
-- `[plan]` — Plan ID to claim (e.g., `01-02` or `PLAN-01-02`)
+- `[plan]` — Plan ID to claim (e.g., `01-02` or `01-02-PLAN`, supports decimal phases like `05.1-01`)
 - `--force` — Override existing claim (use with caution)
 - `--resume` — Resume previously claimed work
 
@@ -33,7 +33,7 @@ Continuing with claim...
 
 If already working on a plan:
 ```
-This terminal is already working on PLAN-01-01.
+This terminal is already working on 01-01-PLAN.
 
 Options:
 1. Complete current plan first
@@ -42,7 +42,7 @@ Options:
 ```
 
 ### Step 2: Check Plan Availability
-1. Read `.planning/phases/[phase]/PLAN-[id].md`
+1. Read `.planning/phases/[phase]/[id]-PLAN.md` (supports decimal phases like `05.1-01-PLAN.md`)
 2. Verify plan exists
 3. Check `assignments.md` for existing claims
 4. Check wave prerequisites
@@ -52,16 +52,16 @@ Options:
 Plan 01-05 not found.
 
 Available plans in Phase 01:
-- PLAN-01-01: Database Schema (claimed by gm-001)
-- PLAN-01-02: User Auth (available)
-- PLAN-01-03: API Routes (available)
+- 01-01-PLAN: Database Schema (claimed by gm-001)
+- 01-02-PLAN: User Auth (available)
+- 01-03-PLAN: API Routes (available)
 
 Run /gm-parallel to see full breakdown.
 ```
 
 **If already claimed:**
 ```
-PLAN-01-02 is already claimed by Session gm-002.
+01-02-PLAN is already claimed by Session gm-002.
 
 Options:
 1. Choose different plan: /gm-parallel
@@ -72,11 +72,11 @@ Session gm-002 status: Active (last ping 5m ago)
 
 **If wave not ready:**
 ```
-PLAN-01-04 is in Wave 2.
+01-04-PLAN is in Wave 2.
 
 Wave 1 is still in progress:
-- PLAN-01-01: in_progress (gm-001)
-- PLAN-01-02: in_progress (gm-002)
+- 01-01-PLAN: in_progress (gm-001)
+- 01-02-PLAN: in_progress (gm-002)
 
 Wait for Wave 1 to complete before claiming Wave 2 plans.
 ```
@@ -103,7 +103,7 @@ Wait for Wave 1 to complete before claiming Wave 2 plans.
 Output confirmation and start:
 
 ```
-Claimed PLAN-01-02: User Authentication
+Claimed 01-02-PLAN: User Authentication
 
 Session: gm-004
 Wave: 1
@@ -120,7 +120,7 @@ Starting execution...
 
 ### Step 5: Execute via GSD
 Call GSD's internal executor with the specific plan:
-- Read PLAN-01-02.md for tasks
+- Read 01-02-PLAN.md for tasks
 - Execute each task
 - Update progress in STATE.md
 - Commit changes atomically
@@ -134,7 +134,7 @@ When plan execution finishes:
 4. Output summary:
 
 ```
-PLAN-01-02 complete.
+01-02-PLAN complete.
 
 Summary:
 - Tasks completed: 5/5
@@ -157,7 +157,7 @@ With `--force` flag:
 ```
 /gm-claim 01-02 --force
 
-Warning: Forcing claim on PLAN-01-02
+Warning: Forcing claim on 01-02-PLAN
 
 This will:
 - Override existing claim by gm-002
@@ -176,7 +176,7 @@ With `--resume` flag:
 ```
 /gm-claim 01-02 --resume
 
-Resuming previous work on PLAN-01-02...
+Resuming previous work on 01-02-PLAN...
 
 Previous progress:
 - Tasks completed: 3/5
@@ -192,7 +192,7 @@ Continuing from Task 4: "Add session management"
 
 **If execution fails:**
 ```
-Error during PLAN-01-02 execution.
+Error during 01-02-PLAN execution.
 
 Task 3 failed: Create login endpoint
 Error: TypeScript compilation error
@@ -205,7 +205,7 @@ Options:
 
 **If conflict detected:**
 ```
-Conflict detected while working on PLAN-01-02.
+Conflict detected while working on 01-02-PLAN.
 
 File: src/api/routes.ts
 Another session modified this file.

@@ -23,7 +23,7 @@ Display comprehensive overview of:
 2. `.planning/parallel/sessions.md` — Session tracking
 3. `.planning/parallel/assignments.md` — Plan assignments
 4. `.planning/parallel/conflicts.md` — Locks and conflicts
-5. `.planning/phases/[current]/PLAN-*.md` — Plan frontmatter
+5. `.planning/phases/[current]/*-PLAN.md` — Plan frontmatter (supports decimal phases like `05.1-01-PLAN.md`)
 
 ### Step 2: Generate Status Report
 
@@ -59,22 +59,16 @@ Display comprehensive overview of:
 ### Session Details
 
 **gm-001** (Terminal 1)
-- Plan: PLAN-02-01 - API Authentication
+- Plan: 02-01-PLAN - API Authentication
 - Progress: 3/5 tasks (60%)
 - Current task: "Implement JWT validation"
 - Files locked: `src/auth/*.ts`
 
 **gm-002** (Terminal 2)
-- Plan: PLAN-02-02 - Database Models
+- Plan: 02-02-PLAN - Database Models
 - Status: Complete
 - Duration: 18 minutes
 - Ready to claim new work
-
-**gm-003** (Terminal 3)
-- Plan: PLAN-02-03 - User Service
-- Progress: 2/4 tasks (50%)
-- Current task: "Add user CRUD operations"
-- Files locked: `src/services/user.ts`
 
 ---
 
@@ -88,13 +82,6 @@ Display comprehensive overview of:
 | 2 | 2 | 0 | 0 | 2 |
 
 **Wave 1 Status:** 33% complete (1/3)
-- PLAN-02-01: in_progress (gm-001)
-- PLAN-02-02: complete (gm-002)
-- PLAN-02-03: in_progress (gm-003)
-
-**Wave 2 Status:** Waiting for Wave 1
-- PLAN-02-04: waiting (unclaimed)
-- PLAN-02-05: waiting (unclaimed)
 
 ---
 
@@ -115,39 +102,9 @@ Display comprehensive overview of:
 | File | Locked By | Plan | Duration |
 |------|-----------|------|----------|
 | src/auth/jwt.ts | gm-001 | 02-01 | 25m |
-| src/auth/middleware.ts | gm-001 | 02-01 | 25m |
 | src/services/user.ts | gm-003 | 02-03 | 12m |
 
 No conflicts detected.
-
----
-
-## Recent Activity
-
-| Time | Session | Action |
-|------|---------|--------|
-| 2m ago | gm-001 | Completed task "Create auth routes" |
-| 5m ago | gm-002 | Plan 02-02 complete |
-| 8m ago | gm-003 | Started task "Add user CRUD" |
-| 12m ago | gm-003 | Claimed PLAN-02-03 |
-| 18m ago | gm-002 | Claimed PLAN-02-02 |
-
----
-
-## Recommendations
-
-### For This Terminal (gm-004)
-
-You're currently idle. Options:
-1. **Claim available work:** `/gm-claim 02-02` (gm-002 finished, can help Wave 1)
-2. **Wait for Wave 2:** Wave 1 almost done, Wave 2 will have 2 plans
-3. **Help verify:** `/gm-guard` to check completed work
-
-### For All Terminals
-
-- Wave 1 is 67% complete
-- Estimated time to Wave 2: ~10 minutes
-- No blockers detected
 
 ---
 
@@ -172,7 +129,7 @@ If problems detected, add warnings section:
 
 ### Stale Session Detected
 Session **gm-005** has been inactive for 45 minutes.
-- Last plan: PLAN-02-06
+- Last plan: 02-06-PLAN
 - Status: in_progress
 - Last ping: 45m ago
 
@@ -184,13 +141,6 @@ Sessions gm-001 and gm-003 may both need `src/api/index.ts`
 - Risk: Merge conflict if both modify
 
 Recommendation: Coordinate before modifying shared files
-
-### Wave Blockage
-Wave 2 cannot start until:
-- PLAN-02-01 completes (currently 60%)
-- PLAN-02-03 completes (currently 50%)
-
-Estimated wait: ~15 minutes
 ```
 
 ## Compact Mode
@@ -203,23 +153,4 @@ SESSIONS: 4 active, 1 idle (this)
 WAVE 1: 1/3 complete, 2 in progress
 WAVE 2: waiting (2 plans)
 YOUR TURN: /gm-claim 02-04 when Wave 2 ready
-```
-
-## JSON Output
-
-For automation, support `/gm-status --json`:
-
-```json
-{
-  "project": "My App",
-  "phase": 2,
-  "sessions": [
-    {"id": "gm-001", "plan": "02-01", "status": "in_progress"},
-    {"id": "gm-002", "plan": "02-02", "status": "complete"}
-  ],
-  "waves": {
-    "1": {"total": 3, "complete": 1},
-    "2": {"total": 2, "complete": 0, "blocked": true}
-  }
-}
 ```

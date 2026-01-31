@@ -57,16 +57,6 @@ Active sessions:
 Did you mean gm-003?
 ```
 
-**If session stale:**
-```
-Session gm-002 appears stale (last ping 45m ago).
-
-Options:
-1. Assign anyway (session may not respond)
-2. Choose active session
-3. Wait for session to reconnect
-```
-
 ### Step 3: Check Plan Availability
 
 **If plan doesn't exist:**
@@ -112,13 +102,7 @@ Assign an available Wave 1 plan instead.
    | gm-002 | Terminal 2 | 01-03 | assigned | - | [now] |
    ```
 
-3. Log in `conflicts.md` (notification):
-   ```markdown
-   ## Pending Notifications
-   | Session | Message | Time |
-   |---------|---------|------|
-   | gm-002 | Assigned PLAN-01-03 by coordinator | [now] |
-   ```
+3. Log notification in `conflicts.md`
 
 ### Step 5: Confirm Assignment
 
@@ -156,66 +140,6 @@ Note: PLAN-01-04 will wait for Wave 1 to complete.
 Assigned 3 plans. Sessions notified.
 ```
 
-## Coordinator Mode
-
-For coordinating many terminals:
-
-```
-/gm-assign --interactive
-
-Entering coordinator mode...
-
-Current phase: 01 - Foundation
-Available plans: 3
-Active sessions: 4
-
-Unassigned plans:
-1. PLAN-01-02: Database Schema (Wave 1)
-2. PLAN-01-03: User Auth (Wave 1)
-3. PLAN-01-04: API Routes (Wave 2)
-
-Idle sessions:
-- gm-002
-- gm-003
-- gm-004
-
-Assign plan 01-02 to which session? [gm-002/gm-003/gm-004]: gm-002
-Assigned.
-
-Assign plan 01-03 to which session? [gm-003/gm-004]: gm-003
-Assigned.
-
-All Wave 1 plans assigned.
-Wave 2 plans will auto-queue when Wave 1 completes.
-
-Exit coordinator mode? [y/n]: y
-
-Summary:
-- Assigned: 2 plans
-- Queued: 1 plan (Wave 2)
-```
-
-## Force Assignment
-
-Override existing assignments:
-
-```
-/gm-assign gm-002 01-03 --force
-
-Warning: Force assigning PLAN-01-03
-
-This will:
-- Remove assignment from gm-001
-- Mark gm-001's work as transferred
-- Assign to gm-002
-
-gm-001's progress (if any) will need manual recovery.
-
-Proceed? [y/n]: y
-
-Reassigned PLAN-01-03 from gm-001 to gm-002.
-```
-
 ## Auto-Assign
 
 Let God Mode distribute work automatically:
@@ -234,18 +158,4 @@ Remaining:
 
 Auto-assignment complete.
 Sessions notified to begin work.
-```
-
-## Error Handling
-
-**If assignment fails:**
-```
-Failed to assign PLAN-01-03 to gm-002.
-
-Reason: Session gm-002 disconnected during assignment.
-
-Options:
-1. Retry: /gm-assign gm-002 01-03
-2. Choose different session: /gm-assign gm-003 01-03
-3. Let session self-claim when back: Plan remains available
 ```

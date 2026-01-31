@@ -68,13 +68,6 @@ Options:
 Choice [1/2/3]:
 ```
 
-**If no work started:**
-```
-PLAN-01-02 claimed but no work done.
-
-Releasing immediately...
-```
-
 ### Step 3: Handle Uncommitted Work
 
 **Option 1: Commit and release**
@@ -110,10 +103,6 @@ Plan released.
    ```markdown
    | 01-02 | 1 | - | available | [timestamp] |
    ```
-   Or if partial:
-   ```markdown
-   | 01-02 | 1 | - | partial (3/5) | [timestamp] |
-   ```
 
 2. **sessions.md:**
    ```markdown
@@ -121,12 +110,7 @@ Plan released.
    ```
 
 3. **conflicts.md:**
-   Remove file locks:
-   ```markdown
-   ## Released Locks
-   | src/auth/login.ts | gm-001 | [released] |
-   | src/auth/session.ts | gm-001 | [released] |
-   ```
+   Remove file locks
 
 ### Step 5: Confirm Release
 
@@ -167,48 +151,6 @@ Next session should verify state before continuing.
 Released PLAN-01-02 from gm-003.
 ```
 
-## Release All
-
-Release all claims for a session:
-
-```
-/gm-release --all
-
-This session has claimed:
-- PLAN-01-02 (in_progress, 3/5 tasks)
-- PLAN-01-05 (queued for Wave 2)
-
-Release all? [y/n]: y
-
-Committing PLAN-01-02 progress...
-Committed: "WIP: PLAN-01-02 partial"
-
-Releasing PLAN-01-05 queue position...
-
-Released 2 plans. Session now idle.
-```
-
-## Coordinator Release
-
-Release plans from any session (coordinator mode):
-
-```
-/gm-release --session gm-003
-
-Session gm-003 has:
-- PLAN-01-02 (in_progress)
-
-Release all plans from gm-003? [y/n]: y
-
-Warning: Session gm-003 may still be active.
-This could cause conflicts if they continue working.
-
-Notifying gm-003 via conflicts.md...
-Released PLAN-01-02.
-
-gm-003 will see: "Your plan was released by coordinator"
-```
-
 ## Error Handling
 
 **If plan not found:**
@@ -233,17 +175,4 @@ Fix:
 1. Commit changes: git add . && git commit -m "WIP"
 2. Or discard: git checkout .
 3. Then retry: /gm-release 01-02
-```
-
-**If file locks stuck:**
-```
-Released PLAN-01-02 but file locks remain.
-
-Stuck locks:
-- src/auth/login.ts
-
-Manual cleanup:
-/gm-sync --force
-
-Or edit .planning/parallel/conflicts.md directly.
 ```

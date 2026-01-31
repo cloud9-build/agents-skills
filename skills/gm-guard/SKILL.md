@@ -158,16 +158,6 @@ If verification passes:
 3. Update `conflicts.md` - clear resolved conflicts
 4. Release all file locks for completed plans
 
-## Conflict Resolution Commands
-
-When conflicts are detected, suggest:
-
-```
-/gm-resolve [plan] --keep    # Keep this plan's changes, discard others
-/gm-resolve [plan] --merge   # Open merge tool
-/gm-resolve [plan] --revert  # Revert this plan's changes
-```
-
 ## No-Code Mode
 
 The guardian does NOT write code. It only:
