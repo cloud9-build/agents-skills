@@ -1,145 +1,169 @@
 ---
 name: gm-parallel
-description: Identify parallel work opportunities from plan.md. Analyzes task dependencies and generates ready-to-paste prompts for running multiple Claude sessions simultaneously.
+description: Show which GSD plans can run in parallel based on wave assignments. Reads wave frontmatter from PLAN.md files and displays terminal assignment suggestions.
 ---
 
-# /gm-parallel: Identify Parallel Work
+# /gm-parallel: Show Parallelizable Work
 
 ## Trigger
-User runs `/gm-parallel` after plan exists.
+User runs `/gm-parallel` after God Mode is initialized.
+
+## Purpose
+Analyze GSD's PLAN.md files in the current phase, read their `wave` frontmatter, and show which plans can run simultaneously in different terminals.
 
 ## Process
 
-### Step 1: Read Current State
-Read all `.gm/` files:
-- `plan.md` for task list and dependencies
-- `context.md` for current phase
-- `progress.md` for completed tasks
-- `issues.md` for blockers
+### Step 1: Verify Prerequisites
+1. Check `.planning/PROJECT.md` exists - if not, error: "No GSD project. Run /gsd:new-project first."
+2. Check `.planning/parallel/` exists - if not, error: "God Mode not initialized. Run /gm first."
+3. Read `.planning/STATE.md` to get current phase
 
-### Step 2: Identify Current Phase
-Determine which phase is active based on:
-- Checked boxes in plan.md
-- Phase number in context.md
+### Step 2: Read Phase Plans
+1. Get current phase from STATE.md
+2. Find all PLAN-*.md files in `.planning/phases/[phase]/`
+3. Parse frontmatter from each plan:
+   ```yaml
+   ---
+   phase: 01
+   plan: 02
+   title: User Authentication
+   wave: 1
+   status: pending
+   ---
+   ```
 
-### Step 3: Analyze Remaining Tasks
-For each uncompleted task in current phase:
-1. Check explicit `*(parallel: X.Y)*` annotations
-2. Analyze file dependencies (what files will be created/modified)
-3. Check for shared state (database tables, global config)
-4. Identify data flow dependencies
+### Step 3: Group by Wave
+Organize plans into wave groups:
 
-### Step 4: Group Parallel Candidates
-Create groups of tasks that can safely run simultaneously:
-
-**Safe to parallelize when:**
-- Tasks touch different files
-- Tasks create independent features
-- No task reads another's output
-- All share the same prerequisite phase
-
-**NOT safe to parallelize when:**
-- Tasks modify same files
-- One task depends on another's output
-- Tasks share database migration order
-- Tasks have API contract dependencies
-
-### Step 5: Generate Terminal Prompts
-For each parallel group, create a ready-to-paste prompt:
-
-```markdown
-## Parallel Group [N]: [Description]
-
-### Terminal 1: [Task Name]
 ```
-Read `.gm/plan.md` and `.gm/context.md`.
-Assume all previous phases are complete.
+Wave 1 (can start now):
+  - PLAN-01-01: Database Schema
+  - PLAN-01-02: User Authentication
+  - PLAN-01-03: API Routes
 
-Your task: [Task X.Y description]
+Wave 2 (after wave 1 complete):
+  - PLAN-01-04: Frontend Integration
+  - PLAN-01-05: Error Handling
 
-Focus only on this task. Do not work on other tasks.
-
-When complete:
-1. Save all code to the appropriate files
-2. Check off task X.Y in `.gm/plan.md`
-3. Add an entry to `.gm/progress.md`
-4. Log any decisions to `.gm/decisions.md`
-5. Log any issues to `.gm/issues.md`
-6. Report "Task X.Y complete" and stop
+Wave 3 (after wave 2 complete):
+  - PLAN-01-06: Testing & QA
 ```
 
-### Terminal 2: [Task Name]
-```
-Read `.gm/plan.md` and `.gm/context.md`.
-Assume all previous phases are complete.
+### Step 4: Check Current Assignments
+Read `.planning/parallel/assignments.md` to see:
+- Which plans are already claimed
+- Which sessions are active
+- Which plans are complete
 
-Your task: [Task X.Z description]
-
-Focus only on this task. Do not work on other tasks.
-
-When complete:
-1. Save all code to the appropriate files
-2. Check off task X.Z in `.gm/plan.md`
-3. Add an entry to `.gm/progress.md`
-4. Log any decisions to `.gm/decisions.md`
-5. Log any issues to `.gm/issues.md`
-6. Report "Task X.Z complete" and stop
-```
-```
-
-### Step 6: Warn About Conflicts
-List potential merge points:
-```markdown
-## After Parallel Work
-
-These files may need review for conflicts:
-- [file1.ts] — touched by Terminal 1 and Terminal 3
-- [config.json] — may have overlapping changes
-
-Run `/gm-guard` after all terminals complete to verify integration.
-```
-
-### Step 7: Output Format
+### Step 5: Generate Output
 
 ```markdown
 # Parallel Work Analysis
 
-## Current State
-- Phase: [N]
-- Completed: [X/Y] tasks
-- Ready for parallel: [N] tasks
+**Phase:** 01 - Foundation
+**Total Plans:** 6
+**Current Wave:** 1
 
-## Parallel Groups
+## Wave Status
 
-### Group 1: [Name] (2 terminals)
-**Tasks:** 2.2, 2.3
-**Why safe:** Different files, no shared state
-**Potential conflicts:** None
+### Wave 1: Ready to Parallelize (3 plans)
 
-[Terminal prompts here]
+| Plan | Title | Status | Assigned To |
+|------|-------|--------|-------------|
+| 01-01 | Database Schema | in_progress | gm-001 (Terminal 1) |
+| 01-02 | User Authentication | available | - |
+| 01-03 | API Routes | available | - |
 
-### Group 2: [Name] (3 terminals)
-**Tasks:** 2.5, 2.6, 2.7
-**Why safe:** Independent features
-**Potential conflicts:** shared API routes file
+**Recommendation:** Open 2 more terminals and run:
+- Terminal 2: `/gm-claim 01-02`
+- Terminal 3: `/gm-claim 01-03`
 
-[Terminal prompts here]
+### Wave 2: Waiting (2 plans)
+
+| Plan | Title | Blocked By |
+|------|-------|------------|
+| 01-04 | Frontend Integration | Wave 1 incomplete |
+| 01-05 | Error Handling | Wave 1 incomplete |
+
+*These plans will be available after Wave 1 completes.*
+
+### Wave 3: Waiting (1 plan)
+
+| Plan | Title | Blocked By |
+|------|-------|------------|
+| 01-06 | Testing & QA | Wave 2 incomplete |
 
 ---
 
-## Sequential Tasks (Cannot Parallelize)
-- Task 2.4: Depends on 2.2 and 2.3 output
-- Task 2.8: Modifies core config
+## Terminal Prompts
 
-## After Parallel Completion
-1. Wait for all terminals to report complete
-2. Run `/gm-guard` to verify integration
-3. Resolve any file conflicts
-4. Continue with sequential tasks
+Copy-paste these into new terminal windows:
+
+### Terminal 2
+```
+/gm
+/gm-claim 01-02
 ```
 
-## Key Warnings to Include
-- Always run `/gm-guard` after parallel work
-- Don't start dependent tasks until parallel group finishes
-- Each terminal should update `.gm/` files independently
-- Review progress.md for any gaps after parallel work
+### Terminal 3
+```
+/gm
+/gm-claim 01-03
+```
+
+---
+
+## After All Terminals Complete
+
+1. Each terminal runs `/gm-sync` to check for conflicts
+2. Run `/gm-status` to verify all wave 1 plans complete
+3. Wave 2 plans will automatically become available
+```
+
+### Step 6: Handle Edge Cases
+
+**If no plans in current phase:**
+```
+No plans found in Phase [N].
+
+Run /gsd:plan-phase to create plans first.
+```
+
+**If all plans already assigned:**
+```
+All plans in Wave [N] are already assigned.
+
+Active sessions:
+- gm-001: PLAN-01-01 (in_progress)
+- gm-002: PLAN-01-02 (in_progress)
+- gm-003: PLAN-01-03 (in_progress)
+
+Wait for current work to complete, or run /gm-status for details.
+```
+
+**If wave complete but next wave blocked:**
+```
+Wave 1 complete. Wave 2 is blocked.
+
+Blocking issues:
+- PLAN-01-01 completed but verification failed
+- See /gsd:verify-work for details
+
+Fix blocking issues before Wave 2 can start.
+```
+
+## Wave Calculation
+
+If a PLAN.md doesn't have a `wave` field, God Mode should:
+1. Warn: "PLAN-01-02 missing wave assignment"
+2. Default to highest wave + 1 (treat as sequential)
+3. Suggest: "Run /gsd:plan-phase to regenerate with wave assignments"
+
+## No-Code Mode
+
+This command only reads and analyzes. It does NOT:
+- Modify any files
+- Execute any plans
+- Claim any work
+
+Use `/gm-claim` to actually assign work to this terminal.

@@ -1,204 +1,60 @@
 ---
 name: gm-plan
-description: Create a structured execution plan for god-mode. Analyzes the project, asks clarifying questions, then generates plan.md with phased tasks, dependencies, quality gates, and parallel work annotations.
+description: DEPRECATED - God Mode no longer handles planning. Redirects to GSD's /gsd:plan-phase command.
 ---
 
-# /gm-plan: Create Execution Plan
+# /gm-plan: Deprecated
 
-## Trigger
-User runs `/gm-plan` or asks to "create a plan" in god-mode context.
+## Notice
 
-## Process
+**This command has been deprecated.**
 
-### Step 1: Understand the Project
-Read the codebase if it exists. Identify:
-- Tech stack (languages, frameworks, databases)
-- Existing file structure
-- Current state (new project vs existing code)
+God Mode is now the parallel session coordinator for GSD, not a standalone planning system.
 
-### Step 2: Ask Clarifying Questions
-Ask the user (use AskUserQuestion tool):
-1. What is the main goal of this project?
-2. What is the target outcome when "done"?
-3. Any hard constraints? (deadline, tech requirements, budget)
-4. What's already built vs needs building?
+## What Changed
 
-### Step 3: Identify Phases
-Break work into logical phases:
-- **Phase 1:** Always foundation (setup, schema, core infra)
-- **Phase 2-N:** Feature phases (group related work)
-- **Final Phase:** Polish, testing, deployment
+- **Old behavior:** God Mode created its own `.gm/plan.md` with phases and tasks
+- **New behavior:** GSD handles all planning; God Mode coordinates parallel execution
 
-### Step 4: Identify Dependencies
-For each task, determine:
-- What must complete before this can start?
-- What other tasks could run in parallel?
-- What files will this modify?
+## Use Instead
 
-### Step 5: Define Quality Gates
-For each phase, define specific pass criteria:
-- Tests pass
-- Schema validates
-- Feature works end-to-end
-- No critical errors in logs
+For planning, use GSD commands:
 
-### Step 6: Generate plan.md
+| Need | Command |
+|------|---------|
+| Plan a phase | `/gsd:plan-phase` |
+| Create a roadmap | `/gsd:new-project` |
+| Add a phase | `/gsd:add-phase` |
 
-Create `.gm/plan.md` with this structure:
+## For Parallel Execution
 
-```markdown
-# Project: [NAME]
+After GSD creates plans, use God Mode for parallel coordination:
 
-## Overview
-[2-3 sentences describing what this project does and why]
-
-## Tech Stack
-- [Language/Framework]
-- [Database]
-- [Key libraries]
-
-## Success Criteria
-- [ ] [Measurable outcome 1]
-- [ ] [Measurable outcome 2]
-- [ ] [Measurable outcome 3]
-
----
-
-## Phase 1: Foundation
-**Goal:** [One sentence]
-**Dependencies:** None
-**Estimated Tasks:** [N]
-
-### Quality Gate
-- [ ] [Specific check 1]
-- [ ] [Specific check 2]
-
-### Tasks
-- [ ] 1.1: [Task description]
-- [ ] 1.2: [Task description]
-- [ ] 1.3: **CHECKPOINT** — Verify foundation before proceeding
-
----
-
-## Phase 2: [Name]
-**Goal:** [One sentence]
-**Dependencies:** Phase 1 complete
-**Estimated Tasks:** [N]
-
-### Quality Gate
-- [ ] [Specific check 1]
-- [ ] [Specific check 2]
-
-### Tasks
-- [ ] 2.1: [Task description]
-- [ ] 2.2: [Task description] *(parallel: 2.3)*
-- [ ] 2.3: [Task description] *(parallel: 2.2)*
-- [ ] 2.4: **CHECKPOINT** — Integration test
-
----
-
-[Continue for all phases]
-
----
-
-## Parallel Work Map
-| Task | Can Parallel With | Reason |
-|------|-------------------|--------|
-| 2.2  | 2.3               | No shared files |
-| 3.1  | 3.2, 3.3          | Independent features |
+```
+/gm              # Initialize parallel coordination
+/gm-parallel     # See which plans can run in parallel
+/gm-claim [plan] # Claim a plan for this terminal
+/gm-phase [N]    # Execute a phase with coordination
 ```
 
-### Step 7: Initialize Other Files
+## Migration
 
-Create `.gm/context.md`:
-```markdown
-# Context Snapshot
-**Updated:** [ISO timestamp]
-**Phase:** 0 (Planning Complete)
-**Status:** ready
+If you were using `/gm-plan`:
 
-## Current State
-- Last completed task: Planning
-- Active work: None - ready to start Phase 1
-- Blocking issues: None
+1. Run `/gsd:new-project` to create a GSD project
+2. Run `/gsd:plan-phase` to plan phases
+3. Run `/gm` to initialize parallel coordination
+4. Run `/gm-parallel` to see parallelizable work
 
-## Key Decisions
-- None yet
+## Why This Change?
 
-## For New Sessions
-- Project goal: [from user input]
-- Start with Phase 1, Task 1.1
-- Run /gm-phase 1 to begin execution
-```
+God Mode and GSD had overlapping functionality:
+- Both created plans
+- Both tracked progress
+- Both had execution logic
 
-Create `.gm/decisions.md`:
-```markdown
-# Decision Log
+Now they have clear responsibilities:
+- **GSD:** Planning, execution, verification
+- **God Mode:** Multi-terminal coordination
 
-## [Today's Date] Project Initialized
-**Context:** Starting new god-mode project
-**Decision:** Using phased approach with [N] phases
-**Rationale:** [Brief explanation of phase structure]
-**Impact:** All work follows plan.md structure
-
----
-```
-
-Create `.gm/issues.md`:
-```markdown
-# Issues & Deferred Work
-
-## Blockers (Must Fix)
-None
-
-## Deferred (Fix Later)
-None
-
-## Edge Cases (Known)
-None
-
-## Resolved
-None yet
-
----
-```
-
-Create `.gm/progress.md`:
-```markdown
-# Progress Tracker
-**Last Updated:** [timestamp]
-
-## Phase Summary
-| Phase | Tasks | Complete | Blocked | Progress |
-|-------|-------|----------|---------|----------|
-| 1     | [N]   | 0        | 0       | 0%       |
-| 2     | [N]   | 0        | 0       | 0%       |
-[...]
-
-## Recent Activity
-- [timestamp] Plan created
-```
-
-### Step 8: Confirm with User
-
-Output:
-```
-Plan created in .gm/plan.md
-
-Summary:
-- [N] phases identified
-- [N] total tasks
-- [N] tasks can run in parallel
-
-Next steps:
-1. Review .gm/plan.md
-2. Run /gm-phase 1 to start execution
-3. Or run /gm-parallel to see parallel opportunities
-```
-
-## Output Artifacts
-- `.gm/plan.md` — The execution plan
-- `.gm/context.md` — Session state
-- `.gm/decisions.md` — Decision log
-- `.gm/issues.md` — Issue tracker
-- `.gm/progress.md` — Progress tracker
+This eliminates duplication and confusion.

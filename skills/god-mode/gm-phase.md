@@ -1,9 +1,9 @@
 ---
 name: gm-phase
-description: Execute a specific phase from plan.md. Takes phase number as argument, runs all tasks in order, updates all tracking files, and performs quality gate checks before declaring complete.
+description: Execute a phase by reading its PLAN.md files, checking waves, and either running a single plan directly or suggesting parallel terminal assignments for multi-wave phases.
 ---
 
-# /gm-phase [N]: Execute Phase
+# /gm-phase [N]: Execute Phase with Parallel Coordination
 
 ## Trigger
 User runs `/gm-phase 1` or `/gm-phase 2` etc.
@@ -11,199 +11,191 @@ User runs `/gm-phase 1` or `/gm-phase 2` etc.
 ## Arguments
 - `N` — Phase number to execute (required)
 
+## Purpose
+Orchestrate phase execution across multiple terminals:
+1. Analyze the phase structure (plans and waves)
+2. For single-plan phases: execute directly
+3. For multi-plan phases: coordinate parallel execution
+
 ## Process
 
-### Step 1: Load Context
-Read all `.gm/` files:
-- `plan.md` — Get phase N tasks
-- `context.md` — Verify ready state
-- `decisions.md` — Understand prior choices
-- `issues.md` — Check for blockers
-- `progress.md` — Confirm prerequisites done
+### Step 1: Verify Prerequisites
+1. Check `.planning/PROJECT.md` exists - if not, error with GSD setup instructions
+2. Check `.planning/parallel/` exists - if not, run `/gm` initialization
+3. Read `.planning/STATE.md` to verify phase N-1 is complete (if N > 1)
 
-### Step 2: Verify Prerequisites
-Check that phase N-1 is complete:
-- All tasks checked off
-- Quality gate passed
-- No blocking issues
+### Step 2: Analyze Phase Structure
+1. Find all PLAN-*.md files in `.planning/phases/[N]-*/`
+2. Parse frontmatter for wave assignments
+3. Count plans per wave
+4. Check current assignments in `assignments.md`
 
-If not ready, output:
+### Step 3: Determine Execution Strategy
+
+**Single Plan Phase:**
+```
+Phase [N] has 1 plan.
+
+Executing directly in this terminal...
+[Runs GSD executor for the plan]
+```
+
+**Multi-Plan, Single Wave:**
+```
+Phase [N] has 3 plans, all in Wave 1.
+
+These can run in parallel:
+- PLAN-01-01: Database Schema
+- PLAN-01-02: User Authentication
+- PLAN-01-03: API Routes
+
+Options:
+1. Run sequentially in this terminal (slower, simpler)
+2. Run in parallel across 3 terminals (faster)
+
+Choice [1/2]:
+```
+
+**Multi-Plan, Multi-Wave:**
+```
+Phase [N] has 5 plans across 2 waves.
+
+Wave 1 (parallel):
+- PLAN-01-01: Database Schema
+- PLAN-01-02: User Authentication
+
+Wave 2 (after Wave 1, parallel):
+- PLAN-01-03: API Integration
+- PLAN-01-04: Frontend Setup
+- PLAN-01-05: Error Handling
+
+Recommended approach:
+1. Open 2 terminals for Wave 1
+2. After Wave 1 completes, open 3 terminals for Wave 2
+
+Start Wave 1 now? [y/n]:
+```
+
+### Step 4: Execute Based on Strategy
+
+**Sequential Execution (single terminal):**
+```
+Executing Phase [N] sequentially...
+
+[1/3] PLAN-01-01: Database Schema
+      Running /gsd:execute-phase with plan 01-01...
+      Complete.
+
+[2/3] PLAN-01-02: User Authentication
+      Running /gsd:execute-phase with plan 01-02...
+      Complete.
+
+[3/3] PLAN-01-03: API Routes
+      Running /gsd:execute-phase with plan 01-03...
+      Complete.
+
+Phase [N] complete. Run /gm-guard to verify.
+```
+
+**Parallel Execution (coordinate terminals):**
+```
+Parallel execution mode for Phase [N].
+
+This terminal will coordinate. Open additional terminals and run:
+
+Terminal 2: /gm && /gm-claim 01-02
+Terminal 3: /gm && /gm-claim 01-03
+
+This terminal claiming PLAN-01-01...
+[Runs GSD executor for plan 01-01]
+
+After all terminals complete, run /gm-sync in any terminal.
+```
+
+### Step 5: Claim and Execute
+
+When this terminal claims a plan:
+1. Update `assignments.md` with claim
+2. Update `sessions.md` with status
+3. Lock relevant files in `conflicts.md`
+4. Execute via GSD: `/gsd:execute-phase` for the specific plan
+5. On completion, update tracking files
+6. Release file locks
+
+### Step 6: Wave Transitions
+
+After Wave N completes:
+1. Run `/gm-guard` to verify
+2. If passed, announce Wave N+1 available:
+   ```
+   Wave 1 complete. Wave 2 plans now available.
+
+   Run /gm-parallel to see assignments.
+   ```
+
+### Step 7: Phase Complete
+
+When all waves done:
+1. Run `/gm-guard` for full phase verification
+2. Update STATE.md via GSD
+3. Announce completion:
+   ```
+   Phase [N] complete.
+
+   Summary:
+   - Plans executed: 5
+   - Waves completed: 2
+   - Sessions used: 3
+   - Conflicts resolved: 0
+
+   Next: Run /gm-phase [N+1] or check /gsd:progress
+   ```
+
+## Error Handling
+
+**If prerequisites fail:**
 ```
 Cannot start Phase [N].
 
 Blockers:
-- [ ] Phase [N-1] task X.Y incomplete
-- [ ] Quality gate not passed: [reason]
-- [ ] Blocking issue: [description]
+- Phase [N-1] not complete (2/4 plans done)
+- Run /gm-guard [N-1] to diagnose
 
-Run /gm-guard [N-1] to diagnose.
+Or force start (not recommended):
+/gm-phase [N] --force
 ```
 
-### Step 3: Update Context
-Update `.gm/context.md`:
-```markdown
-**Updated:** [ISO timestamp]
-**Phase:** [N]
-**Status:** in-progress
-
-## Current State
-- Last completed task: [from previous phase]
-- Active work: Starting Phase [N]
-- Blocking issues: None
+**If session crashes mid-execution:**
 ```
-
-### Step 4: Execute Tasks in Order
-For each task in Phase N:
-
-1. **Announce:** "Starting task N.X: [description]"
-
-2. **Execute:** Perform the work
-   - Write code
-   - Create files
-   - Run commands
-
-3. **Verify:** Check task is actually done
-   - Files exist
-   - Code compiles/runs
-   - Tests pass (if applicable)
-
-4. **Update plan.md:** Check off the task
-   ```markdown
-   - [x] N.X: [description]
-   ```
-
-5. **Update progress.md:** Log completion
-   ```markdown
-   - [timestamp] Completed: Task N.X
-   ```
-
-6. **Log decisions:** If any architecture choices made
-   ```markdown
-   ## [Date] [Decision Title]
-   **Context:** [Why needed]
-   **Decision:** [What chosen]
-   **Impact:** [What this affects]
-   ```
-
-7. **Log issues:** If any problems found
-   ```markdown
-   ## Deferred (Fix Later)
-   - [ ] [Issue description] — Revisit in: Phase [M]
-   ```
-
-8. **Continue** to next task
-
-### Step 5: Handle Checkpoints
-When reaching a **CHECKPOINT** task:
-
-1. Run specified checks (tests, build, validation)
-2. If checks fail:
-   - Log failure to issues.md
-   - Attempt fix
-   - Re-run checks
-   - If still failing, pause and inform user
-3. If checks pass:
-   - Check off checkpoint
-   - Continue to next task
-
-### Step 6: Quality Gate
-After all tasks complete, run quality gate checks from plan.md:
-
-```markdown
-## Quality Gate Check — Phase [N]
-
-Running checks:
-- [ ] [Check 1 from plan.md]
-- [ ] [Check 2 from plan.md]
-- [ ] [Check 3 from plan.md]
-```
-
-For each check:
-- Execute the verification
-- Mark pass/fail
-- Log failures to issues.md
-
-### Step 7: Phase Complete
-
-If all quality gates pass:
-
-Update `.gm/context.md`:
-```markdown
-**Updated:** [ISO timestamp]
-**Phase:** [N] (Complete)
-**Status:** ready
-
-## Current State
-- Last completed task: [N.final]
-- Active work: None - ready for Phase [N+1]
-- Blocking issues: None
-
-## Key Decisions
-[List any decisions made this phase]
-
-## For New Sessions
-- Phase [N] complete
-- [Summary of what was built]
-- Ready to start Phase [N+1]
-```
-
-Update `.gm/progress.md`:
-```markdown
-| [N] | [X] | [X] | 0 | 100% |
-```
-
-Output:
-```
-Phase [N] complete.
-
-Summary:
-- [X] tasks completed
-- [Y] decisions logged
-- [Z] issues deferred
-
-Quality gate: PASSED
-
-Next steps:
-1. Run /gm-guard [N] to verify (recommended)
-2. Run /gm-phase [N+1] to continue
-3. Or run /gm-parallel to parallelize Phase [N+1]
-```
-
-### Step 8: Handle Failures
-
-If quality gate fails:
-
-Update context.md status to "blocked"
-
-Output:
-```
-Phase [N] quality gate FAILED.
-
-Failed checks:
-- [Check description]: [Failure reason]
+Session gm-002 appears stale (no activity 30m).
 
 Options:
-1. Fix the issues and re-run /gm-phase [N]
-2. Review issues in .gm/issues.md
-3. Run /gm-guard [N] for detailed diagnosis
+1. Wait for session to resume
+2. Release plan: /gm-release 01-02
+3. Take over: /gm-claim 01-02 --force
 ```
 
-## Error Handling
+**If conflicts detected:**
+```
+Conflict detected during execution.
 
-**On compile/build errors:**
-1. Log to issues.md
-2. Attempt fix
-3. If unfixable, pause and inform user
-4. Update context.md status to "blocked"
+File: src/api/routes.ts
+This session: Adding auth middleware (lines 30-45)
+Session gm-003: Modified same region
 
-**On test failures:**
-1. Log failing tests to issues.md
-2. If trivial, fix and continue
-3. If complex, log as deferred and continue
-4. Note in context.md
+Options:
+1. Pause and resolve: /gm-sync
+2. Continue (may cause merge conflict later)
+3. Abort this plan: /gm-release 01-01
+```
 
-**On blockers:**
-1. Immediately update issues.md
-2. Update context.md status
-3. Skip blocked task, continue with others if possible
-4. Report blocked tasks at phase end
+## Integration with GSD
+
+This command orchestrates GSD's execution:
+
+1. Reads PLAN.md files from `.planning/phases/`
+2. Executes plans via GSD's internal executor
+3. Updates STATE.md through GSD
+4. Adds parallel coordination layer on top
+
+God Mode doesn't replace GSD's execution - it coordinates WHICH terminal runs WHICH plan.

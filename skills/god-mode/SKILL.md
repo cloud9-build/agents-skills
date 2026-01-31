@@ -1,231 +1,263 @@
 ---
 name: god-mode
-description: Run Claude Code in structured parallel mode with plan tracking, context preservation, and quality gates. Use /gm to start a new project, /gm-plan to create a plan, /gm-parallel to identify parallel work, /gm-phase to execute a phase, /gm-guard to verify completion, /gm-restore to resume work.
+description: Parallel session coordinator for GSD. Run multiple Claude terminals on the same project safely. Use /gm to initialize, /gm-parallel to see parallelizable work, /gm-claim to assign plans to terminals, /gm-status to monitor, /gm-sync to merge.
 ---
 
-# God Mode: Structured Parallel Execution Framework
+# God Mode: Parallel Session Coordinator for GSD
 
-Run complex projects with multiple parallel Claude sessions while maintaining coherence, tracking progress, and preserving context.
+Coordinate multiple Claude Code terminals working on the same GSD project simultaneously.
+
+## Philosophy
+
+God Mode is NOT a replacement for GSD. It's the parallel session coordination layer.
+
+- **GSD** plans the work (phases, plans, tasks, waves)
+- **GSD** executes the work (agents, commits, summaries)
+- **God Mode** coordinates WHICH TERMINAL runs WHICH PLAN
+- **God Mode** tracks session states and prevents conflicts
+- **God Mode** is the "air traffic control" for parallel Claude sessions
+
+If you don't need parallel terminals, just use GSD directly.
+Use God Mode when you want to run multiple Claude sessions simultaneously.
 
 ## Quick Start Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/gm` | Initialize god-mode for a project |
-| `/gm-plan` | Create structured plan.md |
-| `/gm-parallel` | Identify parallel work opportunities |
-| `/gm-phase [N]` | Execute phase N |
-| `/gm-guard [N]` | Verify phase N completion |
+| `/gm` | Initialize parallel coordination for a GSD project |
+| `/gm-parallel` | Show which plans can run in parallel (by wave) |
+| `/gm-claim [plan]` | This terminal claims a plan to work on |
+| `/gm-status` | Show all active sessions and their assignments |
+| `/gm-sync` | Check for conflicts and merge completed work |
+| `/gm-guard` | Verify completion (calls GSD verify + conflict check) |
 | `/gm-restore` | Restore context for new session |
 
-## Core Files (Auto-Created)
+## Prerequisite: GSD Project
+
+God Mode requires a GSD project to exist. If you run `/gm` without one:
 
 ```
-.gm/
-├── plan.md           # Phased task breakdown with checkboxes
-├── context.md        # Machine-readable state for session restoration
-├── decisions.md      # Architecture and design choices (dated)
-├── issues.md         # Blockers, deferred work, edge cases
-└── progress.md       # Automated progress tracking
+No GSD project found.
+
+Run /gsd:new-project first to create a project, then use God Mode
+to coordinate parallel terminals.
+```
+
+## Directory Structure
+
+God Mode adds parallel coordination to GSD's existing structure:
+
+```
+.planning/
+├── parallel/                    # God Mode's session coordination
+│   ├── sessions.md             # Active terminal sessions
+│   ├── assignments.md          # Which session has which plan
+│   └── conflicts.md            # File conflict detection log
+├── PROJECT.md                   # GSD's project file (read-only)
+├── ROADMAP.md                   # GSD's roadmap (read-only)
+├── STATE.md                     # GSD's state (read by God Mode)
+└── phases/                      # GSD's phase plans
+    └── 01-foundation/
+        ├── PLAN-01-01.md        # Has wave: 1 in frontmatter
+        ├── PLAN-01-02.md        # Has wave: 1 in frontmatter
+        └── PLAN-01-03.md        # Has wave: 2 in frontmatter
 ```
 
 ## When User Runs /gm
 
-Initialize god-mode by creating the file structure:
+Initialize parallel session coordination:
 
-1. Create `.gm/` directory if it doesn't exist
-2. Read the codebase to understand current state
-3. Ask clarifying questions about the project goal
-4. Create initial `context.md` with:
-   - Project name and one-sentence goal
-   - Tech stack detected
-   - Current session timestamp
-   - Phase: "Planning"
-5. Inform user: "God-mode initialized. Run `/gm-plan` to create your execution plan."
+1. Check for `.planning/PROJECT.md` - if missing, output error and suggest `/gsd:new-project`
+2. Read `.planning/STATE.md` to understand current project state
+3. Create `.planning/parallel/` directory if it doesn't exist
+4. Initialize `sessions.md`, `assignments.md`, `conflicts.md`
+5. Generate a unique session ID for this terminal (e.g., `gm-001`)
+6. Register this session in `sessions.md`
+7. Output:
+   ```
+   God Mode initialized for [PROJECT_NAME]
+   Session ID: gm-001
 
-## File Formats
+   Current phase: [N] - [Phase Name]
+   Plans in phase: [X]
+   Parallelizable (same wave): [Y]
 
-### plan.md
+   Run /gm-parallel to see which plans can run simultaneously.
+   Run /gm-claim [plan] to assign work to this terminal.
+   ```
+
+## Session Tracking
+
+### sessions.md Format
 
 ```markdown
-# Project: [NAME]
+# Parallel Sessions
+**Updated:** [timestamp]
 
-## Overview
-[2-3 sentences: What problem this solves]
+## Active Sessions
 
-## Phases
+| Session ID | Terminal | Plan | Status | Started | Last Ping |
+|------------|----------|------|--------|---------|-----------|
+| gm-001 | Terminal 1 | 01-01 | in_progress | 2024-01-15 10:00 | 2024-01-15 10:30 |
+| gm-002 | Terminal 2 | 01-02 | blocked | 2024-01-15 10:05 | 2024-01-15 10:25 |
+| gm-003 | Terminal 3 | - | idle | 2024-01-15 10:10 | 2024-01-15 10:35 |
 
-### Phase 1: Foundation
-**Dependencies:** None
-**Quality Gate:** [Specific criteria to pass before Phase 2]
+## Completed Sessions
 
-- [ ] Task 1.1: [Description]
-- [ ] Task 1.2: [Description]
-- [ ] **CHECKPOINT:** Run tests, verify schema
-
-### Phase 2: Core Features
-**Dependencies:** Phase 1 complete
-**Quality Gate:** [Specific criteria]
-
-- [ ] Task 2.1: [Description]
-- [ ] Task 2.2: [Description] *(can parallel with 2.3)*
-- [ ] Task 2.3: [Description] *(can parallel with 2.2)*
-- [ ] **CHECKPOINT:** Integration test
-
-### Phase 3: Polish
-**Dependencies:** Phase 2 complete
-**Quality Gate:** [Specific criteria]
-
-- [ ] Task 3.1: [Description]
+| Session ID | Plan | Completed | Duration |
+|------------|------|-----------|----------|
+| gm-003 | 01-03 | 2024-01-15 10:20 | 20m |
 ```
 
-### context.md
+### assignments.md Format
 
 ```markdown
-# Context Snapshot
-**Updated:** [ISO timestamp]
-**Phase:** [Current phase number]
-**Status:** [in-progress | blocked | complete]
+# Plan Assignments
+**Updated:** [timestamp]
 
-## Current State
-- Last completed task: [task ID]
-- Active work: [description]
-- Blocking issues: [none | list]
+## Current Phase: 01 - Foundation
 
-## Key Decisions
-- [Decision 1 summary] → see decisions.md line X
-- [Decision 2 summary] → see decisions.md line Y
+| Plan | Wave | Assigned To | Status |
+|------|------|-------------|--------|
+| 01-01 | 1 | gm-001 | in_progress |
+| 01-02 | 1 | gm-002 | in_progress |
+| 01-03 | 2 | - | waiting (wave 1 incomplete) |
+| 01-04 | 2 | - | waiting (wave 1 incomplete) |
 
-## For New Sessions
-[3-5 bullet summary of what any new session needs to know]
+## Assignment Rules
+- Wave 1 plans can start immediately
+- Wave 2+ plans wait for previous wave completion
+- One plan per session at a time
 ```
 
-### decisions.md
+### conflicts.md Format
 
 ```markdown
-# Decision Log
+# Conflict Detection Log
+**Updated:** [timestamp]
 
-## [YYYY-MM-DD] [Short Title]
-**Context:** [Why this decision was needed]
-**Decision:** [What was decided]
-**Alternatives Considered:** [Brief list]
-**Impact:** [What this affects going forward]
+## File Locks
 
+| File | Locked By | Since | Plan |
+|------|-----------|-------|------|
+| src/api/auth.ts | gm-001 | 2024-01-15 10:15 | 01-01 |
+| src/db/schema.ts | gm-002 | 2024-01-15 10:20 | 01-02 |
+
+## Detected Conflicts
+
+None currently.
+
+## Resolved Conflicts
+
+| File | Sessions | Resolution | Date |
+|------|----------|------------|------|
+```
+
+## Wave-Based Parallelism
+
+God Mode reads the `wave` field from GSD's PLAN.md frontmatter:
+
+```yaml
+---
+phase: 01
+plan: 01
+title: Database Schema
+wave: 1
 ---
 ```
 
-### issues.md
-
-```markdown
-# Issues & Deferred Work
-
-## Blockers (Must Fix)
-- [ ] [Issue]: [Description] — Blocks: [task ID]
-
-## Deferred (Fix Later)
-- [ ] [Issue]: [Description] — Revisit in: [phase]
-
-## Edge Cases (Known)
-- [ ] [Scenario]: [How it's handled or TODO]
-
-## Resolved
-- [x] [Issue]: [Resolution] — [Date]
-```
-
-### progress.md
-
-```markdown
-# Progress Tracker
-**Last Updated:** [timestamp]
-
-## Phase Summary
-| Phase | Tasks | Complete | Blocked | Progress |
-|-------|-------|----------|---------|----------|
-| 1     | 5     | 5        | 0       | 100%     |
-| 2     | 8     | 3        | 1       | 37%      |
-| 3     | 4     | 0        | 0       | 0%       |
-
-## Recent Activity
-- [timestamp] Completed: Task 2.3
-- [timestamp] Started: Task 2.4
-- [timestamp] Blocked: Task 2.5 (see issues.md)
-```
+**Wave Rules:**
+- Plans in the same wave can run in parallel
+- Higher waves wait for all lower waves to complete
+- Wave 1 plans can start immediately
+- Wave 2 plans wait for all wave 1 plans to complete
 
 ## Execution Rules
 
-### Before Starting Any Task
-1. Read `context.md` first
-2. Check `issues.md` for blockers
-3. Verify dependencies in `plan.md`
+### Before Claiming a Plan
+1. Read `assignments.md` - is the plan already claimed?
+2. Read `sessions.md` - is this session already working on something?
+3. Check wave prerequisites - are earlier waves complete?
 
-### After Completing Any Task
-1. Check off task in `plan.md`
-2. Update `progress.md` with timestamp
-3. Update `context.md` current state
-4. Log any new decisions to `decisions.md`
-5. Log any new issues to `issues.md`
+### After Claiming a Plan
+1. Update `assignments.md` with session assignment
+2. Update `sessions.md` with status change
+3. Lock files that will be modified (in `conflicts.md`)
+4. Execute the plan using GSD's executor
 
-### Before Moving to Next Phase
-1. Run the quality gate checks listed in `plan.md`
-2. Verify all tasks checked off
-3. Run `/gm-guard [N]` to validate
-4. Update `context.md` phase number
+### After Completing a Plan
+1. Update `assignments.md` status to complete
+2. Update `sessions.md` with completion
+3. Release file locks
+4. Run `/gm-sync` to check for conflicts
+5. If all wave plans complete, notify that next wave can start
 
 ### On Any Error or Blocker
-1. Log to `issues.md` immediately
-2. Update `context.md` status to "blocked"
-3. Continue with non-blocked tasks if possible
-4. Inform user of blocker
+1. Update session status to "blocked"
+2. Log issue to GSD's STATE.md
+3. Release file locks if abandoning
+4. Notify other sessions via `conflicts.md`
 
-## Quality Gates
+## Cross-Session Conflict Detection
 
-Every phase transition requires:
-1. All phase tasks checked complete
-2. Quality gate criteria met (defined in plan.md)
-3. No critical issues in issues.md
-4. Guardian verification passed
+When `/gm-sync` runs:
 
-## Parallel Work Rules
+1. **Git status check:**
+   - Any uncommitted changes?
+   - Any merge conflicts?
 
-Tasks can run in parallel when:
-- They have no shared file dependencies
-- They don't modify the same database tables
-- They don't depend on each other's output
-- Phase dependencies are met
+2. **File lock check:**
+   - Any files locked by multiple sessions?
+   - Any files modified outside of locks?
 
-Mark parallelizable tasks in plan.md with:
-`*(can parallel with X.Y)*`
+3. **Plan state check:**
+   - Any plans marked complete but STATE.md disagrees?
+   - Any sessions that went silent (stale ping)?
 
-## Session Restoration Protocol
+4. **Resolution suggestions:**
+   ```
+   Conflict detected in src/api/routes.ts
 
-When starting a new session:
-1. Run `/gm-restore`
-2. Claude reads all .gm/ files
-3. Claude outputs current state summary
-4. Claude identifies next action
-5. User confirms or redirects
+   - Session gm-001 modified lines 50-75
+   - Session gm-002 modified lines 60-90
 
-## Integration After Parallel Work
+   Options:
+   1. Merge manually (git merge)
+   2. Keep gm-001's changes (git checkout --ours)
+   3. Keep gm-002's changes (git checkout --theirs)
+   ```
 
-After parallel sessions complete:
-1. Run `/gm-guard` to check for conflicts
-2. Review any overlapping file changes
-3. Resolve conflicts in a dedicated session
-4. Update all .gm/ files to reflect merged state
+## Integration with GSD
 
-## Rollback Protocol
-
-If a phase fails quality gates:
-1. Document failure in issues.md
-2. Use `git log` to find last good state
-3. Create rollback plan in decisions.md
-4. Execute rollback with `git revert` or `git reset`
-5. Update context.md with rollback note
+| God Mode | GSD Integration |
+|----------|-----------------|
+| `/gm` | Reads `.planning/PROJECT.md`, `.planning/STATE.md` |
+| `/gm-parallel` | Reads `wave` from PLAN.md frontmatter |
+| `/gm-claim` | Executes plan via GSD's executor |
+| `/gm-guard` | Calls `/gsd:verify-work` + parallel conflict check |
+| `/gm-restore` | Reads GSD's STATE.md + parallel sessions.md |
 
 ## Best Practices
 
-1. **One job per terminal** - Keep prompts focused
-2. **Update files immediately** - Don't batch updates
-3. **Trust the plan** - Deviate only when necessary, log why
-4. **Guard religiously** - Always verify before phase transitions
-5. **Context is king** - Keep context.md accurate for seamless handoffs
+1. **One plan per terminal** - Don't run multiple plans in one session
+2. **Claim before working** - Always run `/gm-claim` before starting
+3. **Sync frequently** - Run `/gm-sync` after completing work
+4. **Respect waves** - Don't skip wave order even if technically possible
+5. **Ping regularly** - Sessions update `Last Ping` to show they're active
+6. **Clean exit** - If stopping, release claims with `/gm-release`
+
+## Migration from Old God Mode
+
+If you have an existing `.gm/` directory from the old God Mode:
+
+```
+Detected legacy .gm/ directory.
+
+God Mode now integrates with GSD instead of standalone operation.
+
+To migrate:
+1. Run /gsd:new-project to create a GSD project
+2. Copy relevant decisions from .gm/decisions.md to project docs
+3. Delete .gm/ directory
+4. Run /gm to initialize the new parallel coordination
+```
