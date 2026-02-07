@@ -39,12 +39,16 @@ The frontmatter defines:
 
 ## Creating a New Skill
 
-1. Create a directory under `skills/`
-2. Add `SKILL.md` with frontmatter and instructions
-3. Add `README.md` documenting usage
-4. Add sub-command files for additional commands
-5. Add templates if needed
-6. Submit a pull request
+1. Copy `_TEMPLATE/SKILL.md` to `your-skill-name/SKILL.md`
+2. Fill in the frontmatter (`name`, `description`) and all sections
+3. Make it **project-agnostic** (no hardcoded paths or project names)
+4. Add `README.md` documenting usage (optional)
+5. Add sub-command files for additional commands (optional)
+6. Add templates if needed (optional)
+7. Test locally: `cp -r skills/your-skill-name ~/.claude/skills/`
+8. Submit a pull request
+
+See [_TEMPLATE/SKILL.md](./_TEMPLATE/SKILL.md) for a complete copy-paste starter.
 
 ## Best Practices
 
