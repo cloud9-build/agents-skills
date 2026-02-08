@@ -1,6 +1,6 @@
 ---
 name: gm-claim
-description: Claim a GSD plan for this terminal to work on. Updates assignments.md, locks relevant files, and begins execution.
+description: Claim a GSD plan for this terminal. Updates assignments.md, registers file locks, then delegates execution to GSD via /gsd:execute-phase.
 ---
 
 # /gm-claim [plan]: Claim a Plan
@@ -14,7 +14,13 @@ User runs `/gm-claim 01-02` or `/gm-claim 01-02-PLAN`.
 - `--resume` — Resume previously claimed work
 
 ## Purpose
-Assign a specific plan to this terminal for execution. Prevents other terminals from working on the same plan.
+Assign a specific plan to this terminal session. God Mode handles the coordination — GSD handles the execution.
+
+## Core Rule
+
+**God Mode is air traffic control. GSD flies the plane.**
+
+`/gm-claim` coordinates (session registration, plan assignment, file locks) then tells the user to run GSD's execution command. It does NOT execute plan tasks directly.
 
 ## Process
 
@@ -81,7 +87,7 @@ Wave 1 is still in progress:
 Wait for Wave 1 to complete before claiming Wave 2 plans.
 ```
 
-### Step 3: Claim the Plan
+### Step 3: Register the Claim
 1. Update `assignments.md`:
    ```markdown
    | 01-02 | 1 | gm-004 | claimed | [timestamp] |
@@ -89,7 +95,7 @@ Wait for Wave 1 to complete before claiming Wave 2 plans.
 
 2. Update `sessions.md`:
    ```markdown
-   | gm-004 | Terminal 4 | 01-02 | in_progress | [now] | [now] |
+   | gm-004 | Terminal 4 | 01-02 | claimed | [now] | [now] |
    ```
 
 3. Lock files (from plan's expected file changes):
@@ -99,8 +105,9 @@ Wait for Wave 1 to complete before claiming Wave 2 plans.
    | src/auth/register.ts | gm-004 | [now] | 01-02 |
    ```
 
-### Step 4: Begin Execution
-Output confirmation and start:
+### Step 4: Hand Off to GSD
+
+**Do NOT execute the plan directly.** Output the claim confirmation and instruct:
 
 ```
 Claimed 01-02-PLAN: User Authentication
@@ -111,36 +118,37 @@ Files locked:
   - src/auth/login.ts
   - src/auth/register.ts
 
-Starting execution...
+Run GSD to execute:
 
----
+  /gsd:execute-phase [phase-number]
 
-[GSD executor output for the plan]
+GSD handles the full execution pipeline (executor agents, atomic
+commits, checkpoints, state updates, SUMMARY.md creation).
 ```
 
-### Step 5: Execute via GSD
-Call GSD's internal executor with the specific plan:
-- Read 01-02-PLAN.md for tasks
-- Execute each task
-- Update progress in STATE.md
-- Commit changes atomically
+**Why delegate to GSD?** GSD's execution pipeline handles:
+- `gsd-tools.js init` for config loading
+- `gsd-executor` subagent spawning with proper prompt templates
+- Atomic per-task commits with conventional format
+- SUMMARY.md creation with self-check verification
+- STATE.md updates via `gsd-tools.js state advance-plan`
+- Checkpoint protocol (human-verify, decision, human-action)
+- Deviation rules (auto-fix bugs, missing functionality, blocking issues)
+- Gap closure cycle (verify → plan gaps → execute gaps)
 
-### Step 6: On Completion
-When plan execution finishes:
+Reimplementing any of this in God Mode creates divergence and bugs.
+
+### Step 5: After GSD Completes
+
+When GSD finishes (SUMMARY.md exists for the plan), update GM tracking:
 
 1. Update `assignments.md` status to `complete`
 2. Update `sessions.md` with completion time
-3. Release file locks
-4. Output summary:
+3. Release file locks in `conflicts.md`
+4. Output:
 
 ```
-01-02-PLAN complete.
-
-Summary:
-- Tasks completed: 5/5
-- Files modified: 2
-- Commits: 3
-- Duration: 15m
+01-02-PLAN complete (via GSD).
 
 Your session is now idle.
 
@@ -178,29 +186,29 @@ With `--resume` flag:
 
 Resuming previous work on 01-02-PLAN...
 
-Previous progress:
-- Tasks completed: 3/5
-- Last task: "Create login endpoint"
+Previous progress (from SUMMARY.md or git log):
 - Last commit: abc123 "Add login route"
 
-Continuing from Task 4: "Add session management"
+Re-registering claim in assignments.md...
 
-[Execution continues]
+Run GSD to continue:
+
+  /gsd:execute-phase [phase-number]
+
+GSD will detect existing progress and resume from the first
+incomplete plan.
 ```
 
 ## Error Handling
 
-**If execution fails:**
+**If GSD execution fails:**
 ```
-Error during 01-02-PLAN execution.
-
-Task 3 failed: Create login endpoint
-Error: TypeScript compilation error
+GSD reported an error during 01-02-PLAN execution.
 
 Options:
-1. Debug and retry: Review error, fix, run /gm-claim 01-02 --resume
-2. Mark as blocked: /gm-block 01-02 "Compilation error in auth module"
-3. Release for others: /gm-release 01-02
+1. Debug and retry: Review error, run /gsd:execute-phase again
+2. Release for others: /gm-release 01-02
+3. Check status: /gm-status
 ```
 
 **If conflict detected:**

@@ -1,6 +1,6 @@
 ---
 name: gm-guard
-description: Verify phase completion by calling GSD's verify-work and adding parallel-session conflict detection. The guardian for coordinated parallel execution.
+description: Verify phase completion by calling GSD's verify-work and adding parallel-session conflict detection. Routes to gap closure when needed.
 ---
 
 # /gm-guard: Verify Completion with Conflict Check
@@ -15,6 +15,7 @@ User runs `/gm-guard` or `/gm-guard [phase]`.
 1. Call GSD's `/gsd:verify-work` to verify the actual work is done
 2. Add parallel-session specific checks for conflicts and synchronization issues
 3. Ensure all sessions completed cleanly before moving to next phase/wave
+4. Route to GSD's gap closure cycle when gaps are found
 
 ## Process
 
@@ -29,7 +30,7 @@ Invoke `/gsd:verify-work` which:
 - Checks all plans in the phase are complete
 - Verifies code matches plan descriptions
 - Runs quality gate checks
-- Returns pass/fail with details
+- Creates VERIFICATION.md with status: `passed`, `gaps_found`, or `human_needed`
 
 ### Step 3: Parallel-Specific Checks
 
@@ -112,9 +113,13 @@ Consider running /gm-release 01-04 to free the plan.
 
 ## Verdict
 
-[PASS | FAIL | PARTIAL]
+[PASS | FAIL | GAPS_FOUND | PARTIAL]
+```
 
-### If PASS:
+### Step 5: Route Based on Verdict
+
+**PASS:**
+```
 Phase [N] Wave [W] verified complete.
 All sessions completed without conflicts.
 
@@ -122,23 +127,52 @@ Next steps:
 1. Wave [W+1] plans are now available
 2. Run /gm-parallel to see new assignments
 3. Or run /gm-phase [N+1] if phase complete
+```
 
-### If FAIL (conflicts):
-Conflicts detected. Resolution required.
+**GAPS_FOUND (GSD verification found missing work):**
+
+This is the gap closure cycle — GSD owns this process:
+
+```
+Phase [N] verification found gaps.
+
+Score: [X]/[Y] must-haves verified
+Report: .planning/phases/[dir]/[phase]-VERIFICATION.md
+
+What's Missing:
+[Gap summaries from VERIFICATION.md]
+
+To fix, run GSD's gap closure cycle:
+
+  1. /gsd:plan-phase [N] --gaps     (creates fix plans from VERIFICATION.md)
+  2. /gsd:execute-phase [N] --gaps-only   (executes only gap closure plans)
+  3. /gm-guard [N]                  (re-verify)
+
+If running parallel gap closure:
+  1. /gsd:plan-phase [N] --gaps
+  2. /gm-phase [N]                  (coordinate gap plans across terminals)
+  3. /gm-guard [N]                  (re-verify)
+```
+
+**FAIL (conflicts between sessions):**
+```
+Conflicts detected. Resolution required before verification can pass.
 
 Conflicts:
 1. src/api/routes.ts — overlapping changes
 
 Resolution options:
 1. Manual merge: Review and combine changes
-2. Session priority: Keep gm-001's changes (/gm-resolve 01-01)
+2. Session priority: Keep gm-001's changes
 3. Revert: Undo gm-003's changes and redo
 
 After resolving:
 1. Commit the resolution
 2. Re-run /gm-guard
+```
 
-### If FAIL (incomplete):
+**FAIL (incomplete — sessions still working):**
+```
 Wave [W] incomplete.
 
 Missing:
@@ -150,12 +184,12 @@ Options:
 3. Claim in this terminal: /gm-claim 01-03
 ```
 
-### Step 5: Update Tracking Files
+### Step 6: Update Tracking Files
 
 If verification passes:
-1. Update `sessions.md` - mark sessions as verified
-2. Update `assignments.md` - mark wave as complete
-3. Update `conflicts.md` - clear resolved conflicts
+1. Update `sessions.md` — mark sessions as verified
+2. Update `assignments.md` — mark wave as complete
+3. Update `conflicts.md` — clear resolved conflicts
 4. Release all file locks for completed plans
 
 ## No-Code Mode
@@ -163,8 +197,10 @@ If verification passes:
 The guardian does NOT write code. It only:
 - Reads and analyzes
 - Reports findings
+- Routes to GSD commands for fixes
 - Suggests resolution commands
 
 If fixes are needed, user should:
 1. Resolve conflicts manually or with suggested commands
-2. Re-run `/gm-guard` to verify
+2. Use GSD's gap closure cycle for missing functionality
+3. Re-run `/gm-guard` to verify

@@ -1,27 +1,30 @@
 ---
 name: gm-phase
-description: Execute a phase by reading its PLAN.md files, checking waves, and either running a single plan directly or suggesting parallel terminal assignments for multi-wave phases.
+description: Analyze a phase's plans and waves, then coordinate parallel terminal assignments. Delegates all execution to GSD's /gsd:execute-phase.
 ---
 
-# /gm-phase [N]: Execute Phase with Parallel Coordination
+# /gm-phase [N]: Coordinate Phase Execution
 
 ## Trigger
 User runs `/gm-phase 1` or `/gm-phase 2` etc.
 
 ## Arguments
-- `N` — Phase number to execute (required)
+- `N` — Phase number to coordinate (required)
 
 ## Purpose
-Orchestrate phase execution across multiple terminals:
-1. Analyze the phase structure (plans and waves)
-2. For single-plan phases: execute directly
-3. For multi-plan phases: coordinate parallel execution
+Analyze phase structure and coordinate terminal assignments for parallel execution. This command is the **coordinator** — it reads plans, groups by wave, and tells users which terminals should claim which plans. It does NOT execute plans itself.
+
+## Core Rule
+
+**God Mode is air traffic control. GSD flies the plane.**
+
+`/gm-phase` analyzes and coordinates. `/gsd:execute-phase` does the actual execution. God Mode never spawns executor agents or runs plan tasks directly.
 
 ## Process
 
 ### Step 1: Verify Prerequisites
-1. Check `.planning/PROJECT.md` exists - if not, error with GSD setup instructions
-2. Check `.planning/parallel/` exists - if not, run `/gm` initialization
+1. Check `.planning/PROJECT.md` exists — if not, error with GSD setup instructions
+2. Check `.planning/parallel/` exists — if not, run `/gm` initialization first
 3. Read `.planning/STATE.md` to verify phase N-1 is complete (if N > 1)
 
 ### Step 2: Analyze Phase Structure
@@ -30,116 +33,91 @@ Orchestrate phase execution across multiple terminals:
 3. Count plans per wave
 4. Check current assignments in `assignments.md`
 
-### Step 3: Determine Execution Strategy
+### Step 3: Present Execution Strategy
 
 **Single Plan Phase:**
 ```
-Phase [N] has 1 plan.
+Phase [N] has 1 plan: [plan-name]
 
-Executing directly in this terminal...
-[Runs GSD executor for the plan]
+No parallel coordination needed. Run directly:
+
+  /gsd:execute-phase [N]
 ```
 
 **Multi-Plan, Single Wave:**
 ```
 Phase [N] has 3 plans, all in Wave 1.
 
-These can run in parallel:
+These can run in parallel across terminals:
 - 01-01-PLAN: Database Schema
 - 01-02-PLAN: User Authentication
 - 01-03-PLAN: API Routes
 
 Options:
-1. Run sequentially in this terminal (slower, simpler)
-2. Run in parallel across 3 terminals (faster)
+1. Sequential — Run /gsd:execute-phase [N] in this terminal (runs all plans one by one)
+2. Parallel — Open 3 terminals, each claims one plan
 
-Choice [1/2]:
+For parallel execution:
+  Terminal 1: /gm && /gm-claim 01-01   then   /gsd:execute-phase [N]
+  Terminal 2: /gm && /gm-claim 01-02   then   /gsd:execute-phase [N]
+  Terminal 3: /gm && /gm-claim 01-03   then   /gsd:execute-phase [N]
+
+After all complete: /gm-sync
 ```
 
 **Multi-Plan, Multi-Wave:**
 ```
 Phase [N] has 5 plans across 2 waves.
 
-Wave 1 (parallel):
+Wave 1 (can run in parallel):
 - 01-01-PLAN: Database Schema
 - 01-02-PLAN: User Authentication
 
-Wave 2 (after Wave 1, parallel):
+Wave 2 (after Wave 1 completes):
 - 01-03-PLAN: API Integration
 - 01-04-PLAN: Frontend Setup
 - 01-05-PLAN: Error Handling
 
 Recommended approach:
-1. Open 2 terminals for Wave 1
-2. After Wave 1 completes, open 3 terminals for Wave 2
+1. Open 2 terminals for Wave 1 (each claims + runs via GSD)
+2. Run /gm-sync after Wave 1 completes
+3. Open 3 terminals for Wave 2
 
-Start Wave 1 now? [y/n]:
+Wave 1 terminal commands:
+  Terminal 1: /gm && /gm-claim 01-01   then   /gsd:execute-phase [N]
+  Terminal 2: /gm && /gm-claim 01-02   then   /gsd:execute-phase [N]
 ```
 
-### Step 4: Execute Based on Strategy
+### Step 4: Register Coordination State
 
-**Sequential Execution (single terminal):**
-```
-Executing Phase [N] sequentially...
+Update `assignments.md` with the phase overview:
 
-[1/3] 01-01-PLAN: Database Schema
-      Running /gsd:execute-phase with plan 01-01...
-      Complete.
+```markdown
+## Current Phase: [N] - [Name]
 
-[2/3] 01-02-PLAN: User Authentication
-      Running /gsd:execute-phase with plan 01-02...
-      Complete.
-
-[3/3] 01-03-PLAN: API Routes
-      Running /gsd:execute-phase with plan 01-03...
-      Complete.
-
-Phase [N] complete. Run /gm-guard to verify.
+| Plan | Wave | Assigned To | Status |
+|------|------|-------------|--------|
+| 01-01 | 1 | - | available |
+| 01-02 | 1 | - | available |
+| 01-03 | 2 | - | waiting (wave 1) |
 ```
 
-**Parallel Execution (coordinate terminals):**
+### Step 5: Wave Transition Guidance
+
+After presenting the strategy, remind:
+
 ```
-Parallel execution mode for Phase [N].
+After each wave completes:
+1. All terminals run /gm-sync to check for conflicts
+2. Run /gm-guard to verify completed work
+3. If passed, next wave plans become available
+4. Claim next wave plans and run /gsd:execute-phase again
 
-This terminal will coordinate. Open additional terminals and run:
-
-Terminal 2: /gm && /gm-claim 01-02
-Terminal 3: /gm && /gm-claim 01-03
-
-This terminal claiming 01-01-PLAN...
-[Runs GSD executor for plan 01-01]
-
-After all terminals complete, run /gm-sync in any terminal.
+After ALL waves complete:
+1. Run /gm-guard for full phase verification
+2. GSD handles ROADMAP.md and STATE.md updates
+3. Check next phase: /gsd:progress
 ```
-
-### Step 5: Wave Transitions
-
-After Wave N completes:
-1. Run `/gm-guard` to verify
-2. If passed, announce Wave N+1 available:
-   ```
-   Wave 1 complete. Wave 2 plans now available.
-
-   Run /gm-parallel to see assignments.
-   ```
-
-### Step 6: Phase Complete
-
-When all waves done:
-1. Run `/gm-guard` for full phase verification
-2. Update STATE.md via GSD
-3. Announce completion:
-   ```
-   Phase [N] complete.
-
-   Summary:
-   - Plans executed: 5
-   - Waves completed: 2
-   - Sessions used: 3
-   - Conflicts resolved: 0
-
-   Next: Run /gm-phase [N+1] or check /gsd:progress
-   ```
 
 ## Error Handling
 
@@ -165,13 +143,12 @@ Options:
 3. Take over: /gm-claim 01-02 --force
 ```
 
-## Integration with GSD
+## What This Command Does NOT Do
 
-This command orchestrates GSD's execution:
+- Does NOT spawn gsd-executor agents (GSD does that)
+- Does NOT run plan tasks (GSD does that)
+- Does NOT update STATE.md execution state (GSD does that)
+- Does NOT create SUMMARY.md files (GSD does that)
+- Does NOT handle checkpoints (GSD does that)
 
-1. Reads PLAN.md files from `.planning/phases/`
-2. Executes plans via GSD's internal executor
-3. Updates STATE.md through GSD
-4. Adds parallel coordination layer on top
-
-God Mode doesn't replace GSD's execution - it coordinates WHICH terminal runs WHICH plan.
+It ONLY reads phase structure and coordinates which terminal works on which plan.

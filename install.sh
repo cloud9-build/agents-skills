@@ -59,7 +59,7 @@ select_runtime() {
     echo "  3) Gemini CLI"
     echo "  4) All of the above"
     echo ""
-    read -p "Enter choice [1-4]: " runtime_choice
+    read -p "Enter choice [1-4]: " runtime_choice < /dev/tty
 
     case $runtime_choice in
         1) RUNTIMES=("claude");;
@@ -83,7 +83,7 @@ select_location() {
     echo "  1) Global (all projects) - installs to ~/.<runtime>/skills/"
     echo "  2) Local (current project only) - installs to ./.<runtime>/skills/"
     echo ""
-    read -p "Enter choice [1-2]: " location_choice
+    read -p "Enter choice [1-2]: " location_choice < /dev/tty
 
     case $location_choice in
         1) INSTALL_GLOBAL=true;;

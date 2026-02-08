@@ -12,10 +12,13 @@ Coordinate multiple Claude Code terminals working on the same GSD project simult
 God Mode is NOT a replacement for GSD. It's the parallel session coordination layer.
 
 - **GSD** plans the work (phases, plans, tasks, waves)
-- **GSD** executes the work (agents, commits, summaries)
+- **GSD** executes the work (executor agents, atomic commits, summaries, state updates)
+- **GSD** verifies the work (verifier agents, gap closure cycle)
 - **God Mode** coordinates WHICH TERMINAL runs WHICH PLAN
 - **God Mode** tracks session states and prevents conflicts
 - **God Mode** is the "air traffic control" for parallel Claude sessions
+
+**God Mode is air traffic control. GSD flies the plane.**
 
 If you don't need parallel terminals, just use GSD directly.
 Use God Mode when you want to run multiple Claude sessions simultaneously.
@@ -26,9 +29,10 @@ Use God Mode when you want to run multiple Claude sessions simultaneously.
 |---------|---------|
 | `/gm` | Initialize parallel coordination for a GSD project |
 | `/gm-parallel` | Show which plans can run in parallel (by wave) |
-| `/gm-claim [plan]` | This terminal claims a plan to work on |
+| `/gm-claim [plan]` | Register this terminal's claim on a plan |
+| `/gm-phase [N]` | Analyze phase and coordinate terminal assignments |
 | `/gm-status` | Show all active sessions and their assignments |
-| `/gm-sync` | Check for conflicts and merge completed work |
+| `/gm-sync` | Check for conflicts and reconcile state |
 | `/gm-guard` | Verify completion (calls GSD verify + conflict check) |
 | `/gm-restore` | Restore context for new session |
 
@@ -53,9 +57,9 @@ God Mode adds parallel coordination to GSD's existing structure:
 │   ├── sessions.md             # Active terminal sessions
 │   ├── assignments.md          # Which session has which plan
 │   └── conflicts.md            # File conflict detection log
-├── PROJECT.md                   # GSD's project file (read-only)
-├── ROADMAP.md                   # GSD's roadmap (read-only)
-├── STATE.md                     # GSD's state (read by God Mode)
+├── PROJECT.md                   # GSD's project file (read-only for GM)
+├── ROADMAP.md                   # GSD's roadmap (read-only for GM)
+├── STATE.md                     # GSD's state (read by GM, written ONLY by GSD)
 └── phases/                      # GSD's phase plans
     └── 01-foundation/
         ├── 01-01-PLAN.md        # Has wave: 1 in frontmatter
@@ -175,18 +179,26 @@ wave: 1
 
 ## Execution Rules
 
+### The Delegation Principle
+
+God Mode NEVER executes plan tasks. The workflow is:
+
+1. **GM coordinates** → claim plan, lock files, register session
+2. **GSD executes** → user runs `/gsd:execute-phase` which spawns executor agents
+3. **GM tracks** → update assignments, release locks, check for conflicts
+
 ### Before Claiming a Plan
 1. Read `assignments.md` - is the plan already claimed?
 2. Read `sessions.md` - is this session already working on something?
 3. Check wave prerequisites - are earlier waves complete?
 
-### After Claiming a Plan
+### After Claiming a Plan (GM does this)
 1. Update `assignments.md` with session assignment
 2. Update `sessions.md` with status change
 3. Lock files that will be modified (in `conflicts.md`)
-4. Execute the plan using GSD's executor
+4. Tell user to run `/gsd:execute-phase` for actual execution
 
-### After Completing a Plan
+### After GSD Completes a Plan (GM does this)
 1. Update `assignments.md` status to complete
 2. Update `sessions.md` with completion
 3. Release file locks
@@ -195,9 +207,35 @@ wave: 1
 
 ### On Any Error or Blocker
 1. Update session status to "blocked"
-2. Log issue to GSD's STATE.md
-3. Release file locks if abandoning
-4. Notify other sessions via `conflicts.md`
+2. Release file locks if abandoning
+3. Notify other sessions via `conflicts.md`
+4. User can debug, retry via GSD, or release the plan
+
+## STATE.md Concurrency
+
+**Problem:** Multiple sessions running GSD executors write to STATE.md simultaneously via `gsd-tools.js`. Without coordination, one session's writes overwrite another's.
+
+**Solution: Coordinator pattern**
+
+Designate the first session (gm-001) or the `/gm-phase` terminal as the state coordinator:
+
+1. **Executor sessions** run plans and create SUMMARY.md files (GSD does this)
+2. **After each plan completes**, the session updates only GM tracking files (`assignments.md`, `sessions.md`)
+3. **The coordinator** runs `/gm-sync` to reconcile STATE.md from disk:
+   - Counts SUMMARY.md files to determine actual progress
+   - Runs `gsd-tools.js state update-progress` to recalculate
+   - This is idempotent — safe to run multiple times
+
+**If STATE.md gets out of sync:**
+```
+/gm-sync will detect and fix:
+
+Expected completed plans (from SUMMARY.md files): 3
+STATE.md reports: 2
+
+Running: gsd-tools.js state update-progress
+STATE.md reconciled.
+```
 
 ## Cross-Session Conflict Detection
 
@@ -207,15 +245,23 @@ When `/gm-sync` runs:
    - Any uncommitted changes?
    - Any merge conflicts?
 
-2. **File lock check:**
+2. **Branching strategy check:**
+   - Read `branching_strategy` from `.planning/config.json`
+   - Adapt conflict detection to match (same branch vs feature branches)
+
+3. **File lock check:**
    - Any files locked by multiple sessions?
    - Any files modified outside of locks?
 
-3. **Plan state check:**
-   - Any plans marked complete but STATE.md disagrees?
+4. **STATE.md consistency check:**
+   - Does plan counter match SUMMARY.md count on disk?
+   - Reconcile if needed
+
+5. **Plan state check:**
+   - Any plans marked complete but SUMMARY.md missing?
    - Any sessions that went silent (stale ping)?
 
-4. **Resolution suggestions:**
+6. **Resolution suggestions:**
    ```
    Conflict detected in src/api/routes.ts
 
@@ -234,18 +280,61 @@ When `/gm-sync` runs:
 |----------|-----------------|
 | `/gm` | Reads `.planning/PROJECT.md`, `.planning/STATE.md` |
 | `/gm-parallel` | Reads `wave` from PLAN.md frontmatter |
-| `/gm-claim` | Executes plan via GSD's executor |
-| `/gm-guard` | Calls `/gsd:verify-work` + parallel conflict check |
+| `/gm-claim` | Registers claim, then user runs `/gsd:execute-phase` |
+| `/gm-phase` | Analyzes plans, coordinates terminals, delegates to `/gsd:execute-phase` |
+| `/gm-guard` | Calls `/gsd:verify-work` + parallel conflict check + gap closure routing |
+| `/gm-sync` | Reconciles STATE.md, checks GSD branching strategy, detects conflicts |
 | `/gm-restore` | Reads GSD's STATE.md + parallel sessions.md |
+
+**What God Mode owns:**
+- `.planning/parallel/` directory and all files in it
+- Session IDs and lifecycle
+- Plan-to-session assignments
+- File lock tracking
+- Cross-session conflict detection
+
+**What GSD owns (God Mode must NOT touch directly):**
+- Plan execution (executor agents, task commits)
+- STATE.md writes (via gsd-tools.js)
+- SUMMARY.md creation
+- VERIFICATION.md creation
+- ROADMAP.md updates
+- Checkpoint protocol
+- Gap closure cycle
 
 ## Best Practices
 
 1. **One plan per terminal** - Don't run multiple plans in one session
 2. **Claim before working** - Always run `/gm-claim` before starting
-3. **Sync frequently** - Run `/gm-sync` after completing work
-4. **Respect waves** - Don't skip wave order even if technically possible
-5. **Ping regularly** - Sessions update `Last Ping` to show they're active
-6. **Clean exit** - If stopping, release claims with `/gm-release`
+3. **Let GSD execute** - Run `/gsd:execute-phase` after claiming, not plan tasks directly
+4. **Sync frequently** - Run `/gm-sync` after completing work
+5. **Respect waves** - Don't skip wave order even if technically possible
+6. **Designate a coordinator** - One terminal handles `/gm-sync` and STATE.md reconciliation
+7. **Clean exit** - If stopping, release claims with `/gm-release`
+
+## Typical Parallel Workflow
+
+```
+Terminal 1 (Coordinator):
+  /gm                          # Initialize
+  /gm-phase 2                  # Analyze phase, get terminal assignments
+  /gm-claim 02-01              # Claim first plan
+  /gsd:execute-phase 2         # GSD executes the plan
+
+Terminal 2:
+  /gm                          # Initialize (gets gm-002)
+  /gm-claim 02-02              # Claim second plan
+  /gsd:execute-phase 2         # GSD executes the plan
+
+Terminal 3:
+  /gm                          # Initialize (gets gm-003)
+  /gm-claim 02-03              # Claim third plan
+  /gsd:execute-phase 2         # GSD executes the plan
+
+After all complete:
+  Terminal 1: /gm-sync         # Reconcile state, check conflicts
+  Terminal 1: /gm-guard        # Verify via GSD + parallel checks
+```
 
 ## Migration from Old God Mode
 
