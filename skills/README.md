@@ -7,6 +7,7 @@ Skills are specialized prompts that extend your AI coding assistant with new cap
 | Skill | Commands | Description |
 |-------|----------|-------------|
 | [god-mode](./god-mode/) | `/gm`, `/gm-plan`, `/gm-parallel`, `/gm-phase`, `/gm-guard`, `/gm-restore` | Structured parallel execution with plan tracking and quality gates |
+| [route](./route/) | `/route` | Analyze any task and output the optimal execution prompt using sub-agents, agent teams, or both |
 
 ## Skill Structure
 

@@ -175,8 +175,10 @@ print_success() {
     echo ""
     echo "Installed skills:"
     echo "  - god-mode (Structured parallel execution)"
+    echo "  - route (Agent routing engine)"
     echo ""
-    echo -e "${CYAN}Run /gm to get started!${NC}"
+    echo -e "${CYAN}Run /gm to get started with God Mode!${NC}"
+    echo -e "${CYAN}Run /route <task> to route any task to the optimal execution strategy!${NC}"
     echo ""
 }
 

@@ -65,6 +65,7 @@ rm -rf /tmp/agents-skills
 | Skill | Description |
 |-------|-------------|
 | **God Mode** | Structured parallel execution with plan tracking, context preservation, and quality gates |
+| **Route** | Analyze any task (bug, feature, plan, review) and output the optimal execution prompt using sub-agents, agent teams, or both |
 
 ---
 
@@ -101,6 +102,31 @@ God Mode requires a GSD project. Run `/gsd:new-project` first to set up the proj
 
 ---
 
+## Route
+
+Route is an agent routing engine that analyzes any task and outputs the optimal execution prompt. It decides whether to use a single session, sub-agents, agent teams, or a hybrid approach.
+
+| Command | Purpose |
+|---------|---------|
+| `/route <task description>` | Analyze task and output execution prompt |
+
+### How It Works
+
+1. **Scores** the task on 5 dimensions: parallelizability, file scope, coordination need, complexity, and risk
+2. **Routes** to the optimal strategy based on the scores
+3. **Outputs** a ready-to-use prompt with agent roles, spawn prompts, task breakdowns, and completion criteria
+
+### Routing Strategies
+
+| Strategy | When |
+|----------|------|
+| **Single Session** | Simple fixes, low complexity, few files |
+| **Sub-Agents** | Parallel independent work (research, bulk rename, library comparison) |
+| **Agent Team** | Workers need to coordinate (PR review, debugging, cross-layer features) |
+| **Hybrid** | Sub-agents for research, then agent team for implementation |
+
+---
+
 ## Project Structure
 
 ```
@@ -127,10 +153,12 @@ skills/
 │   └── SKILL.md
 ├── gm-plan/            # /gm-plan - Deprecated (use GSD)
 │   └── SKILL.md
-└── god-mode/           # Main documentation
-    ├── SKILL.md
-    ├── README.md
-    └── templates/
+├── god-mode/           # Main documentation
+│   ├── SKILL.md
+│   ├── README.md
+│   └── templates/
+└── route/              # /route - Agent routing engine
+    └── SKILL.md
 ```
 
 **Important:** Each skill command needs its own directory with a `SKILL.md` file. This is how Claude Code discovers and loads skills.
