@@ -62,10 +62,35 @@ rm -rf /tmp/agents-skills
 
 ## Available Skills
 
-| Skill | Description |
-|-------|-------------|
-| **God Mode** | Structured parallel execution with plan tracking, context preservation, and quality gates |
-| **Route** | Analyze any task (bug, feature, plan, review) and output the optimal execution prompt using sub-agents, agent teams, or both |
+### 5-Stage Workflow Pipeline
+
+| Stage | Command | Description |
+|-------|---------|-------------|
+| 1. Plan | `/braindump <idea>` | Interview, write PLAN.md + SPEC.md, auto board review, risk identification |
+| 2. Validate | `/spike` | Time-boxed experiments to test risky assumptions (30 min each) |
+| 3. Build | `/build <phase>` | Analyze work, pick strategy (single/agents/team/GSD), execute |
+| 4. Verify | `/verify <phase>` | Test against SPEC.md acceptance criteria |
+| 5. Learn | `/retro` | Extract lessons, update CLAUDE.md + masterCLAUDE.md |
+
+### Supporting Tools
+
+| Command | Description |
+|---------|-------------|
+| `/workflow` | Navigate the pipeline (start, status, next recommended action) |
+| `/board-review <path>` | Convene 3-4 expert reviewers to score and critique any document |
+| `/handoff` | Capture current state before clearing context |
+| `/blueprint <idea>` | Quick visual exploration (wireframe, architecture, flowchart) |
+
+### Parallel Execution
+
+| Command | Description |
+|---------|-------------|
+| `/gm` | Initialize God Mode for parallel terminal coordination |
+| `/gm-parallel` | Show which plans can run in parallel |
+| `/gm-claim [plan]` | Claim a plan for this terminal |
+| `/gm-status` | Show all active sessions |
+| `/gm-sync` | Check for conflicts and merge work |
+| *+ 5 more /gm- commands* | See [God Mode docs](skills/god-mode/README.md) |
 
 ---
 
@@ -102,28 +127,43 @@ God Mode requires a GSD project. Run `/gsd:new-project` first to set up the proj
 
 ---
 
-## Route
+## 5-Stage Workflow Pipeline
 
-Route is an agent routing engine that analyzes any task and outputs the optimal execution prompt. It decides whether to use a single session, sub-agents, agent teams, or a hybrid approach.
+One command starts the full development cycle. You only stop at 3 gates to make decisions.
 
-| Command | Purpose |
-|---------|---------|
-| `/route <task description>` | Analyze task and output execution prompt |
+```
+/braindump <idea>  →  Interview  →  PLAN.md + SPEC.md  →  Board Review  →  GATE 1
+    →  /spike (if risks)  →  GATE 2  →  /build  →  GATE 3  →  /verify  →  /retro
+```
 
 ### How It Works
 
-1. **Scores** the task on 5 dimensions: parallelizability, file scope, coordination need, complexity, and risk
-2. **Routes** to the optimal strategy based on the scores
-3. **Outputs** a ready-to-use prompt with agent roles, spawn prompts, task breakdowns, and completion criteria
+1. **`/braindump <idea>`** — 5-question interview, auto-generates PLAN.md + SPEC.md, runs board review
+2. **`/spike`** — Tests risky assumptions (auto-triggered or standalone). PASS/PIVOT/BLOCK per risk.
+3. **`/build <phase>`** — Scores the work on 5 dimensions, picks the best strategy, then executes it
+4. **`/verify <phase>`** — Checks built work against SPEC.md criteria (automated + manual)
+5. **`/retro`** — Extracts lessons, applies to CLAUDE.md with per-item confirmation
 
-### Routing Strategies
+### Board Review System
 
-| Strategy | When |
-|----------|------|
-| **Single Session** | Simple fixes, low complexity, few files |
-| **Sub-Agents** | Parallel independent work (research, bulk rename, library comparison) |
-| **Agent Team** | Workers need to coordinate (PR review, debugging, cross-layer features) |
-| **Hybrid** | Sub-agents for research, then agent team for implementation |
+19 expert reviewers across 3 categories score your plans:
+- **5 Workflow Board members** ship with this repo (Operator, Economist, Customer, Architect, Contrarian)
+- **Project-specific boards** are generated per-project using included prompts
+- Board creation prompts in `skills/boards/prompts/` help you design custom boards from your PRD
+
+### When to Skip Stages
+
+| Situation | What To Do |
+|-----------|-----------|
+| Major feature with unknowns | Full pipeline: `/braindump <idea>` |
+| Bug fix or config change | Skip to `/build <description>` |
+| Prototype or throwaway code | Skip verify and retro |
+
+---
+
+## Route (Deprecated)
+
+`/route` has been replaced by `/build`. The `/build` command includes the same 5-dimension analysis plus actual execution. See the [5-Stage Workflow Pipeline](#5-stage-workflow-pipeline) section above.
 
 ---
 
@@ -131,33 +171,37 @@ Route is an agent routing engine that analyzes any task and outputs the optimal 
 
 ```
 skills/
-├── gm/                 # /gm - Initialize God Mode
+├── workflow/           # /workflow - Pipeline navigator
+│   ├── SKILL.md
+│   └── README.md       # Full 5-stage documentation
+├── braindump/          # /braindump - Stage 1: Plan
 │   └── SKILL.md
-├── gm-parallel/        # /gm-parallel - Show parallelizable work
+├── spike/              # /spike - Stage 2: Validate
 │   └── SKILL.md
-├── gm-claim/           # /gm-claim - Claim a plan
+├── build/              # /build - Stage 3: Build (replaces /route)
 │   └── SKILL.md
-├── gm-status/          # /gm-status - Show session status
+├── verify/             # /verify - Stage 4: Verify
 │   └── SKILL.md
-├── gm-sync/            # /gm-sync - Synchronize sessions
+├── retro/              # /retro - Stage 5: Learn
 │   └── SKILL.md
-├── gm-guard/           # /gm-guard - Verify completion
+├── board-review/       # /board-review - Expert panel review
 │   └── SKILL.md
-├── gm-restore/         # /gm-restore - Restore context
+├── handoff/            # /handoff - Context preservation
 │   └── SKILL.md
-├── gm-release/         # /gm-release - Release a plan
+├── blueprint/          # /blueprint - Visual idea planning
 │   └── SKILL.md
-├── gm-assign/          # /gm-assign - Assign plan to session
-│   └── SKILL.md
-├── gm-phase/           # /gm-phase - Execute a phase
-│   └── SKILL.md
-├── gm-plan/            # /gm-plan - Deprecated (use GSD)
-│   └── SKILL.md
-├── god-mode/           # Main documentation
+├── boards/             # Board member profiles (resource)
+│   ├── INDEX.md
+│   ├── workflow/       # 5 generic reviewers
+│   ├── prompts/        # Board creation tools
+│   └── templates/      # Example profiles
+├── god-mode/           # God Mode hub
 │   ├── SKILL.md
 │   ├── README.md
 │   └── templates/
-└── route/              # /route - Agent routing engine
+├── gm*/                # God Mode sub-commands (10 skills)
+│   └── SKILL.md
+└── route/              # Deprecated → use /build
     └── SKILL.md
 ```
 
@@ -169,7 +213,14 @@ skills/
 
 After installation, verify skills are loaded by starting a new Claude Code session. You should see the skills in the available commands list.
 
-To test:
+To test the workflow:
+```
+/workflow
+```
+
+If you see the pipeline overview, the workflow skills are installed correctly.
+
+To test God Mode:
 ```
 /gm
 ```

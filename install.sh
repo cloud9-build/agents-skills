@@ -151,7 +151,7 @@ verify_install() {
     for runtime in "${RUNTIMES[@]}"; do
         local install_path=$(get_install_path "$runtime")
 
-        if [ -f "$install_path/god-mode/SKILL.md" ]; then
+        if [ -f "$install_path/god-mode/SKILL.md" ] && [ -f "$install_path/workflow/SKILL.md" ]; then
             echo -e "  ${GREEN}$runtime: Installed${NC}"
         else
             echo -e "  ${RED}$runtime: Failed${NC}"
@@ -174,11 +174,17 @@ print_success() {
     echo -e "${GREEN}================================================${NC}"
     echo ""
     echo "Installed skills:"
-    echo "  - god-mode (Structured parallel execution)"
-    echo "  - route (Agent routing engine)"
+    echo "  - workflow (5-Stage Pipeline: braindump, spike, build, verify, retro)"
+    echo "  - board-review (Expert review panels with 5 built-in reviewers)"
+    echo "  - god-mode (Parallel terminal coordination)"
+    echo "  - blueprint (Visual idea planning)"
+    echo "  - handoff (Context preservation)"
     echo ""
-    echo -e "${CYAN}Run /gm to get started with God Mode!${NC}"
-    echo -e "${CYAN}Run /route <task> to route any task to the optimal execution strategy!${NC}"
+    echo -e "${CYAN}Quick start:${NC}"
+    echo -e "  ${CYAN}/braindump <idea>${NC}  - Start the full planning pipeline"
+    echo -e "  ${CYAN}/build <task>${NC}      - Analyze and execute any work"
+    echo -e "  ${CYAN}/workflow${NC}          - See pipeline overview"
+    echo -e "  ${CYAN}/gm${NC}               - Initialize parallel terminal coordination"
     echo ""
 }
 

@@ -31,6 +31,15 @@ Before generating the blueprint, check if the project has planning docs that pro
 
 If no planning docs exist, proceed with the idea as described.
 
+Additionally, check for these planning docs if they exist:
+- `.planning/PROJECT.md` — Project definition and constraints
+- `.planning/FRONTEND-SPEC.md` — Frontend specification
+- `.planning/research/ARCHITECTURE.md` — System architecture
+
+These provide rich context for generating accurate blueprints. If none exist, proceed with the idea as described.
+
+**Tip**: After generating a blueprint, you can run `/braindump <idea>` to develop it into a full plan with acceptance criteria and board review.
+
 ## Step 2: Visual Planning
 
 Deliver all three visuals in order:

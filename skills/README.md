@@ -6,8 +6,18 @@ Skills are specialized prompts that extend your AI coding assistant with new cap
 
 | Skill | Commands | Description |
 |-------|----------|-------------|
-| [god-mode](./god-mode/) | `/gm`, `/gm-plan`, `/gm-parallel`, `/gm-phase`, `/gm-guard`, `/gm-restore` | Structured parallel execution with plan tracking and quality gates |
-| [route](./route/) | `/route` | Analyze any task and output the optimal execution prompt using sub-agents, agent teams, or both |
+| [god-mode](./god-mode/) | `/gm`, `/gm-parallel`, `/gm-phase`, `/gm-guard`, `/gm-restore`, etc. | Structured parallel execution with plan tracking and quality gates |
+| [workflow](./workflow/) | `/workflow` | Navigate the 5-stage workflow pipeline (start, status, next) |
+| [braindump](./braindump/) | `/braindump` | Full planning pipeline — idea capture, plan/spec creation, board review, and spike identification |
+| [spike](./spike/) | `/spike` | Time-boxed risk validation (prototype, benchmark, research) |
+| [build](./build/) | `/build` | Analyze work and execute using optimal strategy (replaces /route) |
+| [verify](./verify/) | `/verify` | Universal verification against acceptance criteria |
+| [retro](./retro/) | `/retro` | Session retrospective — extract and apply lessons learned |
+| [board-review](./board-review/) | `/board-review` | Convene expert review panel to score and critique documents |
+| [handoff](./handoff/) | `/handoff` | Capture current state before clearing context |
+| [blueprint](./blueprint/) | `/blueprint` | Generate visual blueprints (wireframe, architecture, flowchart) |
+| [boards](./boards/) | *(resource)* | Board member profiles, creation prompts, and templates |
+| ~~[route](./route/)~~ | ~~/route~~ | **Deprecated** — use `/build` instead |
 
 ## Skill Structure
 
