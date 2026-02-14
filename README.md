@@ -1,28 +1,287 @@
 # Cloud9 Agents & Skills
 
-**Anti-Gravity for AI Development**
-
-Supercharge your AI coding assistant with battle-tested skills and agents. One command, instant productivity boost.
+**Your AI assistant, supercharged.** One install gives your Claude Code (or OpenCode/Gemini CLI) a complete development workflow — from idea to shipped feature.
 
 ---
 
-## Quick Install
+## Install (1 minute)
+
+Paste this into your terminal and hit Enter:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/cloud9-build/agents-skills/main/install.sh | bash
 ```
 
-The installer will guide you through:
-1. **Choose Runtime** - Claude Code, OpenCode, Gemini CLI, or all
-2. **Choose Location** - Global (all projects) or Local (current project only)
+It will ask you two questions:
+
+**Question 1: Which tool do you use?**
+- Pick **Claude Code** (most of us use this)
+- Or pick OpenCode, Gemini CLI, or all three
+
+**Question 2: Where should it install?**
+
+| Option | What it means | Best for |
+|--------|--------------|----------|
+| **Global** | Works in every project on your machine | Most people — install once, done forever |
+| **Local** | Only works in the current project folder | When you want the whole team to share via git |
+
+That's it. Close your terminal, open a new one, and the commands are ready.
 
 ---
 
-## Manual Installation
+## What You Get
 
-If you prefer not to run the curl command:
+### The 5-Stage Pipeline
 
-### For Claude Code (Global - Recommended)
+Think of this as a recipe for building anything — from a small feature to a whole project. Each stage has one command. You don't need to memorize them; just start with `/braindump` and it guides you through the rest.
+
+```
+  Your idea
+     |
+     v
+ /braindump -----> Asks you 5 questions, writes a plan, gets it reviewed
+     |
+     v
+ /spike ---------> Tests risky parts before you commit (optional, auto-suggested)
+     |
+     v
+ /build ---------> Does the actual work
+     |
+     v
+ /verify --------> Checks that everything works against the original plan
+     |
+     v
+ /retro ---------> Captures what we learned so we don't repeat mistakes
+```
+
+### Helper Commands
+
+These work anytime, not just during the pipeline:
+
+| Command | What it does |
+|---------|-------------|
+| `/workflow` | Shows you where you are in the pipeline and what to do next |
+| `/board-review` | Gets expert reviewers to score and critique any document |
+| `/blueprint` | Draws a quick visual sketch of an idea (wireframe + architecture + flowchart) |
+| `/handoff` | Saves your current progress so someone else (or future you) can pick up where you left off |
+
+### Parallel Execution (Advanced)
+
+For power users running multiple Claude windows on the same project:
+
+| Command | What it does |
+|---------|-------------|
+| `/gm` | Turns on God Mode — coordinates multiple terminals safely |
+| `/gm-status` | Shows what each terminal is working on |
+| `/gm-sync` | Merges work from all terminals and checks for conflicts |
+
+See [God Mode docs](skills/god-mode/README.md) for the full command list.
+
+---
+
+## How to Use Each Command
+
+### `/braindump <idea>` — Start here
+
+**When:** You have an idea for something to build, big or small.
+
+**What happens:**
+1. Claude asks you 5 questions about your idea (just answer in plain English)
+2. It writes two files: a **PLAN** (strategy) and a **SPEC** (checklist of what "done" looks like)
+3. It picks 3-4 expert reviewers and they score the plan (see [Board Review](#board-review-system) below)
+4. If anything looks risky, it flags it for testing
+5. You decide: move forward, edit the plan, or stop
+
+**Example:**
+```
+/braindump Add a dashboard that shows document expiration dates
+```
+
+That's all you type. Claude handles the rest.
+
+---
+
+### `/spike` — Test before you commit
+
+**When:** There's a technical risk you want to validate before building the whole thing. Usually auto-suggested by `/braindump` — you rarely need to run this manually.
+
+**What happens:**
+- Claude runs a quick experiment (30 min max) to test the risky part
+- Writes a result: PASS (safe to build), PIVOT (change approach), or BLOCK (don't build this)
+
+**Example:**
+```
+/spike Can the API handle 100 concurrent users under 500ms?
+```
+
+---
+
+### `/build <task>` — Do the work
+
+**When:** You're ready to build. Either after braindump/spike, or directly for simple tasks like bug fixes.
+
+**What happens:**
+1. Claude analyzes the work and picks the best approach:
+   - **Single session** — for small fixes (1-3 files)
+   - **Multiple agents** — for bigger work that can be done in parallel
+   - **Agent team** — for work that needs coordination between specialists
+   - **Full project mode** — for phased project work with dependencies
+2. You confirm the approach
+3. Claude executes it
+
+**Examples:**
+```
+/build Fix the login button not responding on mobile
+/build Implement the notification system from SPEC.md
+```
+
+---
+
+### `/verify <phase>` — Check the work
+
+**When:** After building. Usually auto-triggered — you don't need to remember this one.
+
+**What happens:**
+- Claude goes through every item in the SPEC checklist
+- Runs automated tests where possible
+- Lists manual checks you need to do yourself
+- Writes a pass/fail report
+
+---
+
+### `/retro` — Learn from it
+
+**When:** After verifying. Also usually auto-triggered.
+
+**What happens:**
+- Claude reviews what happened during the build
+- Proposes lessons learned (one at a time — you approve or skip each one)
+- Saves approved lessons so the team doesn't repeat the same mistakes
+
+---
+
+### `/workflow` — Where am I?
+
+**When:** You forgot where you left off, or you want to know what's next.
+
+**Example:**
+```
+/workflow status   — shows which stages are done
+/workflow next     — tells you the next command to run
+```
+
+---
+
+### `/board-review <file>` — Get expert feedback
+
+**When:** You want a structured critique of any document — a plan, architecture doc, PRD, proposal, anything.
+
+**What happens:**
+1. Claude recommends 3-4 reviewers from the board
+2. You confirm or swap reviewers
+3. Each reviewer scores the document on their criteria (1-10)
+4. They discuss: where they agree, where they disagree, unique insights
+5. You get a composite score and specific recommendations
+6. Verdict: APPROVED, APPROVED WITH CONDITIONS, or REVISE AND RESUBMIT
+
+**Example:**
+```
+/board-review .planning/phases/notifications/PLAN.md
+```
+
+---
+
+### `/blueprint <idea>` — Sketch it visually
+
+**When:** You want to see what something looks like before committing to it. Great for aligning with the team.
+
+**What happens:**
+- Draws a **UI wireframe** (screen layout)
+- Draws a **system architecture** (how the pieces connect)
+- Draws a **logic flowchart** (how data moves step by step)
+- Writes a plain-English explanation anyone can understand
+
+**Example:**
+```
+/blueprint Employee onboarding portal with document upload
+```
+
+---
+
+### `/handoff` — Save your spot
+
+**When:** You're stopping work and want to make sure nothing gets lost. Maybe you're done for the day, or handing off to someone else.
+
+**What happens:**
+- Writes a HANDOFF.md file with:
+  - What's done so far
+  - What the next step is
+  - Important context and decisions made
+  - Warnings about tricky spots
+
+**Example:**
+```
+/handoff
+```
+
+---
+
+## Board Review System
+
+The board review system gives you structured feedback from AI "expert reviewers" — each with a different perspective. Think of it like presenting to a panel of advisors.
+
+### What installs automatically (5 reviewers)
+
+These ship with the install and work on any project:
+
+| Reviewer | Their focus | When they're useful |
+|----------|-----------|-------------------|
+| **The Operator** | Can we actually build and ship this? | Plans with timeline, staffing, or dependency risks |
+| **The Economist** | Is this worth the money and time? | Plans with cost or ROI questions |
+| **The Customer Advocate** | Do real users actually want this? | User-facing features, product decisions |
+| **The Architect** | Will this hold up long-term? | Technical designs, anything that adds complexity |
+| **The Contrarian** | What are we missing? What if we're wrong? | Plans with unvalidated assumptions or high stakes |
+
+### Adding project-specific reviewers (optional)
+
+The 5 reviewers above are general-purpose. For deeper, domain-specific feedback, you can create custom board members tailored to your project:
+
+1. Open the prompt file at `skills/boards/prompts/01-design-advisory-boards.md`
+2. Give it your project's PRD or requirements doc
+3. It designs two boards: a Planning Board (business-focused) and an Execution Board (technical)
+4. Run the second prompt (`02-create-board-member-profiles.md`) to generate full reviewer profiles
+5. Save them in your project's `docs/board/` folder
+
+After that, `/board-review` finds both your project reviewers AND the 5 built-in ones, and mixes them for balanced feedback.
+
+See `skills/boards/templates/` for examples of what a full reviewer profile looks like.
+
+---
+
+## When to Use What
+
+| Situation | What to do |
+|-----------|-----------|
+| "I have an idea for a new feature" | `/braindump <idea>` |
+| "I need to fix a bug" | `/build Fix <description>` |
+| "I want feedback on my plan" | `/board-review <file>` |
+| "I want to see what this would look like" | `/blueprint <idea>` |
+| "I'm stopping for the day" | `/handoff` |
+| "Where did I leave off?" | `/workflow status` |
+| "What should I do next?" | `/workflow next` |
+| "I just finished building, now what?" | `/verify` then `/retro` (usually auto) |
+
+---
+
+## Troubleshooting
+
+### Commands not showing up?
+
+1. **Restart your terminal** — new skills only load when you start a fresh session
+2. **Check the install worked** — type `/workflow` and you should see the pipeline overview
+3. **Still nothing?** Try the manual install below
+
+### Manual install (if the curl command doesn't work)
 
 ```bash
 git clone https://github.com/cloud9-build/agents-skills.git /tmp/agents-skills
@@ -31,221 +290,17 @@ cp -r /tmp/agents-skills/skills/* ~/.claude/skills/
 rm -rf /tmp/agents-skills
 ```
 
-### For Claude Code (Local Project)
+Replace `~/.claude` with `~/.opencode` or `~/.gemini` if you use a different tool.
 
-```bash
-git clone https://github.com/cloud9-build/agents-skills.git /tmp/agents-skills
-mkdir -p .claude/skills
-cp -r /tmp/agents-skills/skills/* .claude/skills/
-rm -rf /tmp/agents-skills
-```
+### Need help?
 
-### For OpenCode (Global)
-
-```bash
-git clone https://github.com/cloud9-build/agents-skills.git /tmp/agents-skills
-mkdir -p ~/.opencode/skills
-cp -r /tmp/agents-skills/skills/* ~/.opencode/skills/
-rm -rf /tmp/agents-skills
-```
-
-### For Gemini CLI (Global)
-
-```bash
-git clone https://github.com/cloud9-build/agents-skills.git /tmp/agents-skills
-mkdir -p ~/.gemini/skills
-cp -r /tmp/agents-skills/skills/* ~/.gemini/skills/
-rm -rf /tmp/agents-skills
-```
+Ask in the team channel or open an issue on this repo.
 
 ---
 
-## Available Skills
+## For Contributors
 
-### 5-Stage Workflow Pipeline
-
-| Stage | Command | Description |
-|-------|---------|-------------|
-| 1. Plan | `/braindump <idea>` | Interview, write PLAN.md + SPEC.md, auto board review, risk identification |
-| 2. Validate | `/spike` | Time-boxed experiments to test risky assumptions (30 min each) |
-| 3. Build | `/build <phase>` | Analyze work, pick strategy (single/agents/team/GSD), execute |
-| 4. Verify | `/verify <phase>` | Test against SPEC.md acceptance criteria |
-| 5. Learn | `/retro` | Extract lessons, update CLAUDE.md + masterCLAUDE.md |
-
-### Supporting Tools
-
-| Command | Description |
-|---------|-------------|
-| `/workflow` | Navigate the pipeline (start, status, next recommended action) |
-| `/board-review <path>` | Convene 3-4 expert reviewers to score and critique any document |
-| `/handoff` | Capture current state before clearing context |
-| `/blueprint <idea>` | Quick visual exploration (wireframe, architecture, flowchart) |
-
-### Parallel Execution
-
-| Command | Description |
-|---------|-------------|
-| `/gm` | Initialize God Mode for parallel terminal coordination |
-| `/gm-parallel` | Show which plans can run in parallel |
-| `/gm-claim [plan]` | Claim a plan for this terminal |
-| `/gm-status` | Show all active sessions |
-| `/gm-sync` | Check for conflicts and merge work |
-| *+ 5 more /gm- commands* | See [God Mode docs](skills/god-mode/README.md) |
-
----
-
-## God Mode Commands
-
-God Mode coordinates multiple Claude Code terminals working on the same GSD project simultaneously.
-
-| Command | Purpose |
-|---------|---------|
-| `/gm` | Initialize God Mode for a project |
-| `/gm-parallel` | Show which plans can run in parallel |
-| `/gm-claim [plan]` | Claim a plan for this terminal |
-| `/gm-status` | Show all active sessions |
-| `/gm-sync` | Check for conflicts and merge work |
-| `/gm-guard` | Verify completion with conflict check |
-| `/gm-restore` | Restore context for new session |
-| `/gm-release` | Release a claimed plan |
-| `/gm-assign` | Assign a plan to another session |
-| `/gm-phase [N]` | Execute a phase with coordination |
-
-### What God Mode Does
-
-God Mode transforms how you work on complex projects:
-
-- **Structured Planning** - Break work into phases with dependencies and quality gates
-- **Parallel Execution** - Run multiple Claude sessions safely with conflict detection
-- **Context Preservation** - Never lose progress when starting a new session
-- **Quality Gates** - Automatic verification before moving between phases
-- **Wave-Based Work** - Organize plans into waves that can run in parallel
-
-### Prerequisites
-
-God Mode requires a GSD project. Run `/gsd:new-project` first to set up the project structure.
-
----
-
-## 5-Stage Workflow Pipeline
-
-One command starts the full development cycle. You only stop at 3 gates to make decisions.
-
-```
-/braindump <idea>  →  Interview  →  PLAN.md + SPEC.md  →  Board Review  →  GATE 1
-    →  /spike (if risks)  →  GATE 2  →  /build  →  GATE 3  →  /verify  →  /retro
-```
-
-### How It Works
-
-1. **`/braindump <idea>`** — 5-question interview, auto-generates PLAN.md + SPEC.md, runs board review
-2. **`/spike`** — Tests risky assumptions (auto-triggered or standalone). PASS/PIVOT/BLOCK per risk.
-3. **`/build <phase>`** — Scores the work on 5 dimensions, picks the best strategy, then executes it
-4. **`/verify <phase>`** — Checks built work against SPEC.md criteria (automated + manual)
-5. **`/retro`** — Extracts lessons, applies to CLAUDE.md with per-item confirmation
-
-### Board Review System
-
-19 expert reviewers across 3 categories score your plans:
-- **5 Workflow Board members** ship with this repo (Operator, Economist, Customer, Architect, Contrarian)
-- **Project-specific boards** are generated per-project using included prompts
-- Board creation prompts in `skills/boards/prompts/` help you design custom boards from your PRD
-
-### When to Skip Stages
-
-| Situation | What To Do |
-|-----------|-----------|
-| Major feature with unknowns | Full pipeline: `/braindump <idea>` |
-| Bug fix or config change | Skip to `/build <description>` |
-| Prototype or throwaway code | Skip verify and retro |
-
----
-
-## Route (Deprecated)
-
-`/route` has been replaced by `/build`. The `/build` command includes the same 5-dimension analysis plus actual execution. See the [5-Stage Workflow Pipeline](#5-stage-workflow-pipeline) section above.
-
----
-
-## Project Structure
-
-```
-skills/
-├── workflow/           # /workflow - Pipeline navigator
-│   ├── SKILL.md
-│   └── README.md       # Full 5-stage documentation
-├── braindump/          # /braindump - Stage 1: Plan
-│   └── SKILL.md
-├── spike/              # /spike - Stage 2: Validate
-│   └── SKILL.md
-├── build/              # /build - Stage 3: Build (replaces /route)
-│   └── SKILL.md
-├── verify/             # /verify - Stage 4: Verify
-│   └── SKILL.md
-├── retro/              # /retro - Stage 5: Learn
-│   └── SKILL.md
-├── board-review/       # /board-review - Expert panel review
-│   └── SKILL.md
-├── handoff/            # /handoff - Context preservation
-│   └── SKILL.md
-├── blueprint/          # /blueprint - Visual idea planning
-│   └── SKILL.md
-├── boards/             # Board member profiles (resource)
-│   ├── INDEX.md
-│   ├── workflow/       # 5 generic reviewers
-│   ├── prompts/        # Board creation tools
-│   └── templates/      # Example profiles
-├── god-mode/           # God Mode hub
-│   ├── SKILL.md
-│   ├── README.md
-│   └── templates/
-├── gm*/                # God Mode sub-commands (10 skills)
-│   └── SKILL.md
-└── route/              # Deprecated → use /build
-    └── SKILL.md
-```
-
-**Important:** Each skill command needs its own directory with a `SKILL.md` file. This is how Claude Code discovers and loads skills.
-
----
-
-## Verification
-
-After installation, verify skills are loaded by starting a new Claude Code session. You should see the skills in the available commands list.
-
-To test the workflow:
-```
-/workflow
-```
-
-If you see the pipeline overview, the workflow skills are installed correctly.
-
-To test God Mode:
-```
-/gm
-```
-
-If you see "No GSD project found", the skill is working correctly - it just needs a GSD project first.
-
----
-
-## Troubleshooting
-
-### Skills not showing up?
-
-1. Make sure each skill has its own directory: `~/.claude/skills/gm/SKILL.md`
-2. Restart Claude Code after installing
-3. Check the directory structure matches the layout above
-
-### Curl returns 404?
-
-Use the manual installation method with `git clone` instead.
-
----
-
-## Contributing
-
-We welcome contributions. See [skills/README.md](skills/README.md) for how to create new skills.
+Want to add a new skill? See [skills/README.md](skills/README.md) for the format and structure.
 
 ---
 
