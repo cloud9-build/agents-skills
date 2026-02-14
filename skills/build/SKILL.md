@@ -465,16 +465,98 @@ Run /verify [phase-folder] to check against SPEC.md acceptance criteria.
 
 ---
 
-## Step 9: Auto-Chain
+## Step 9: GSD State Sync (Phase-Related Builds Only)
 
-After ANY execution path completes (Steps 4-8), offer the next action:
+After ANY execution path completes for a **phase-related build** (input referenced a phase folder or phase number), sync the results back to GSD state. Skip this step for ad-hoc builds with no phase association.
+
+### When to Skip
+
+- Build was NOT phase-related (ad-hoc feature, bug fix, etc.)
+- `.planning/` directory doesn't exist
+- GSD is not initialized (no `.planning/config.json`)
+
+### 9a: Write SUMMARY.md
+
+Create `{N}-SUMMARY.md` (or `{N}-01-SUMMARY.md` for wave-based plans) in the phase folder:
+
+```yaml
+---
+phase: {phase-folder-name}
+plan: 01
+subsystem: {ui|api|data|infra}
+tags: [{relevant-tags}]
+key-files:
+  created: [{list}]
+  modified: [{list}]
+  deleted: [{list}]
+key-decisions:
+  - "{decision 1}"
+duration: ~{N}min
+completed: {YYYY-MM-DD}
+---
+```
+
+Followed by:
+- 1-sentence summary
+- Accomplishments list
+- Files created/modified
+- Deviations from plan (if any)
+- Issues encountered (if any)
+
+### 9b: Write VERIFICATION.md
+
+Create `{N}-VERIFICATION.md` in the phase folder with:
+
+```yaml
+---
+phase: {phase-folder-name}
+verified: {YYYY-MM-DD}
+status: {verified|partial|failed}
+score: {X}/{Y} checks passed
+gaps: [{list of unmet criteria, or empty}]
+---
+```
+
+Followed by:
+- Observable truths table (from the plan's verification section or SPEC.md acceptance criteria)
+- Status: verified/partial/failed per check
+- Required artifacts table
+- Human verification test scripts (if applicable)
+
+### 9c: Move Phase Folder
+
+If all acceptance criteria are met:
+
+```bash
+mv .planning/phases/backlog/{phase-folder} .planning/phases/completed/{phase-folder}
+```
+
+If partial (some criteria unmet), leave in backlog and note gaps in VERIFICATION.md.
+
+### 9d: Update STATE.md
+
+Prepend a completion entry to `.planning/STATE.md` under "Recent Completions":
+
+```
+✅ **Phase {N}: {Title}** - VERIFIED COMPLETE ({date})
+- {bullet 1: what was built}
+- {bullet 2: key deliverables}
+- {N} files modified: {list}
+```
+
+---
+
+## Step 10: Auto-Chain
+
+After ANY execution path completes (Steps 4-9), offer the next action:
 
 ```
 ### Next Steps
 
-1. **Verify:** Run /verify [phase-folder] to check against SPEC.md acceptance criteria
-2. **Retro:** Run /retro to capture lessons learned from this build
-3. **Continue:** If more work remains in this phase, run /build with the next task
+1. **State synced:** Phase artifacts written, folder moved to completed/
+2. **Verify:** Run /verify [phase-folder] for deep acceptance check
+3. **Retro:** Run /retro to capture lessons learned
+4. **Continue:** If more work remains, run /build with the next task
 ```
 
 If the build was for a specific phase and the SPEC.md has unchecked acceptance criteria remaining, mention:
