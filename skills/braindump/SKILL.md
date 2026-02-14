@@ -353,9 +353,14 @@ Do NOT stop here. Proceed immediately to Step 5.
 1. **FIRST**: Check if `docs/board/INDEX.md` exists in the project root (project-local boards)
    - If found, read it to access project-specific board members
 
-2. **SECOND**: Check for Workflow Board members that ship with this skill
-   - Located in the `boards/workflow/` directory relative to this skill
-   - 5 general-purpose members: W-OPS, W-ECON, W-CUST, W-ARCH, W-CONT
+2. **SECOND**: Check for Workflow Board members. Search these paths in order (stop at first match):
+   - `~/.claude/skills/boards/workflow/` (global install)
+   - `.claude/skills/boards/workflow/` (local install)
+   - `~/.opencode/skills/boards/workflow/` (OpenCode global)
+   - `.opencode/skills/boards/workflow/` (OpenCode local)
+   - `~/.gemini/skills/boards/workflow/` (Gemini global)
+   - `.gemini/skills/boards/workflow/` (Gemini local)
+   - 5 general-purpose members: W-OPS (`operator.md`), W-ECON (`economist.md`), W-CUST (`customer.md`), W-ARCH (`architect.md`), W-CONT (`contrarian.md`)
 
 3. **If both exist**: Merge the lists and select from all available members (2-3 specialized + 1-2 workflow is the best practice)
 

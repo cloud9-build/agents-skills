@@ -54,13 +54,22 @@ Store the directory of the first reviewed file as the **review directory** (used
    - If found, read `docs/board/INDEX.md` to access the project-specific board member manifest
    - Use the selection guidance in INDEX.md to select relevant board members
 
-2. **SECOND**: If no project-specific board exists, use the 5 Workflow Board members that ship with this skill:
-   - **W-OPS** (Operator) — Execution risk, resource planning, dependency management
-   - **W-ECON** (Economist) — Cost-benefit analysis, ROI, resource allocation
-   - **W-CUST** (Customer Advocate) — User value, adoption, product-market fit
-   - **W-ARCH** (Architect) — Technical design, scalability, maintainability
-   - **W-CONT** (Contrarian) — Assumptions, edge cases, failure modes
-   - Their full profiles are in the `boards/workflow/` directory relative to this skill
+2. **SECOND**: Check for the 5 Workflow Board members that ship with this skill. Search these paths in order (stop at first match):
+   - `~/.claude/skills/boards/workflow/` (global install)
+   - `.claude/skills/boards/workflow/` (local install)
+   - `~/.opencode/skills/boards/workflow/` (OpenCode global)
+   - `.opencode/skills/boards/workflow/` (OpenCode local)
+   - `~/.gemini/skills/boards/workflow/` (Gemini global)
+   - `.gemini/skills/boards/workflow/` (Gemini local)
+
+   When found, read the `INDEX.md` in the parent `boards/` directory for the full manifest. The 5 members are:
+   - **W-OPS** (Operator) — `operator.md` — Execution risk, resource planning, dependency management
+   - **W-ECON** (Economist) — `economist.md` — Cost-benefit analysis, ROI, resource allocation
+   - **W-CUST** (Customer Advocate) — `customer.md` — User value, adoption, product-market fit
+   - **W-ARCH** (Architect) — `architect.md` — Technical design, scalability, maintainability
+   - **W-CONT** (Contrarian) — `contrarian.md` — Assumptions, edge cases, failure modes
+
+   If no project-specific boards exist, use these 5 as the full panel.
 
 3. **THIRD**: If both project-specific and workflow boards exist, merge them:
    - Show all available board members (project-specific + workflow)
