@@ -69,6 +69,20 @@ This is the default development process for new features, phases, and significan
 2. Want to see where you are? → `/workflow status`
 3. Ready to build something specific? → `/build <work>`
 4. Not sure what to do next? → `/workflow next`
+
+## Context Management (Avoiding Context Window Limits)
+
+**New:** Use execution modes to prevent hitting the 200K token limit:
+
+| Mode | Files | Approach | State Files |
+|------|-------|----------|-------------|
+| **Mode A** (Trivial) | < 5 | Single session | None |
+| **Mode B** (Moderate) | 5-15 | Use sub-agents | HANDOFF.md (optional) |
+| **Mode C** (Heavy) | 15+ | Spawn agent teams | HANDOFF.md + TEAM-MANIFEST.md |
+
+**Handoff at 150K tokens:** If you approach context limit, use `/handoff` to capture state, then resume in new session.
+
+**See:** [Execution Modes Guide](execution-modes.md) for full decision tree and examples.
 ```
 
 Then ask: **"Want to run `/workflow status` to see where you are in the current phase?"**

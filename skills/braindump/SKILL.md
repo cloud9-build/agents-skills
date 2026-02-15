@@ -475,10 +475,15 @@ This is the one mandatory gate in the pipeline. Present the full summary and STO
   ```
   No spikes needed. Ready to build.
 
+  **Execution Mode:** [Mode A (Trivial) / Mode B (Moderate) / Mode C (Heavy)]
+  **Reason:** [Based on estimated file count and systems touched from plan]
+
   Recommended strategy: [GSD / Agent Team / Single Session]
   Reason: [1 sentence]
 
   Start building? -> /build [phase-folder]
+
+  See [execution-modes.md](../../workflow/execution-modes.md) for mode details.
   ```
 
 **If "2" or "edit":**
