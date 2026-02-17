@@ -64,6 +64,7 @@ These work anytime, not just during the pipeline:
 | `/board-review` | Gets expert reviewers to score and critique any document |
 | `/blueprint` | Draws a quick visual sketch of an idea (wireframe + architecture + flowchart) |
 | `/handoff` | Saves your current progress so someone else (or future you) can pick up where you left off |
+| `/supabase-pagination` | Critical pattern guide for avoiding 1000-row limit bugs in Supabase queries |
 
 ### Parallel Execution (Advanced)
 
@@ -270,6 +271,8 @@ See `skills/boards/templates/` for examples of what a full reviewer profile look
 | "Where did I leave off?" | `/workflow status` |
 | "What should I do next?" | `/workflow next` |
 | "I just finished building, now what?" | `/verify` then `/retro` (usually auto) |
+| "My Supabase query isn't returning all rows" | `/supabase-pagination` |
+| "I'm implementing data comparisons" | `/supabase-pagination` (check for pagination needs) |
 
 ---
 
