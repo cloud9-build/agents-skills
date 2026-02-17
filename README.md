@@ -64,6 +64,7 @@ These work anytime, not just during the pipeline:
 | `/board-review` | Gets expert reviewers to score and critique any document |
 | `/blueprint` | Draws a quick visual sketch of an idea (wireframe + architecture + flowchart) |
 | `/handoff` | Saves your current progress so someone else (or future you) can pick up where you left off |
+| `/sync-master` | Syncs masterCLAUDE.md lessons between your project and the canonical repo (share learning with team) |
 | `/supabase-pagination` | Critical pattern guide for avoiding 1000-row limit bugs in Supabase queries |
 
 ### Parallel Execution (Advanced)
